@@ -1,0 +1,6 @@
+{
+  "name": "An AI model for child Malnutrition prediction in Yemen",
+  "description": "Offline-first clinical decision support system for predicting child malnutrition (0-59 months) in Yemen low-resource environments using XGBoost, BioMobileBERT NER, and Clinical RAG.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

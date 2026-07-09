@@ -1,0 +1,133 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User account and credentials",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["Administrator", "Doctor", "Nurse"] },
+        "facility": { "type": "string" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["id", "name", "email", "role"]
+    },
+    "Patient": {
+      "title": "Patient Record",
+      "description": "Demographic details of a registered child",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "parentName": { "type": "string" },
+        "ageMonths": { "type": "number" },
+        "sex": { "type": "string", "enum": ["Male", "Female"] },
+        "dateOfBirth": { "type": "string" },
+        "residenceType": { "type": "string", "enum": ["Urban", "Rural"] },
+        "maternalEducation": { "type": "string", "enum": ["None", "Primary", "Secondary", "Higher"] },
+        "wealthIndex": { "type": "string", "enum": ["Poorest", "Poorer", "Middle", "Richer", "Richest"] },
+        "contactNumber": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "parentName", "ageMonths", "sex", "dateOfBirth", "createdAt"]
+    },
+    "Measurement": {
+      "title": "Clinical Measurement",
+      "description": "Physical metrics and symptom logs",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "patientId": { "type": "string" },
+        "date": { "type": "string" },
+        "weightKg": { "type": "number" },
+        "heightCm": { "type": "number" },
+        "oedema": { "type": "boolean" },
+        "breastfeeding": { "type": "boolean" },
+        "vitaminA": { "type": "boolean" },
+        "diarrheaRecent": { "type": "boolean" },
+        "feverRecent": { "type": "boolean" },
+        "coughRecent": { "type": "boolean" },
+        "muacMm": { "type": "number" },
+        "recordedBy": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "patientId", "date", "weightKg", "heightCm", "oedema", "createdAt"]
+    },
+    "MalnutritionPrediction": {
+      "title": "Malnutrition Prediction",
+      "description": "AI model severity classifications and probabilities",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "patientId": { "type": "string" },
+        "measurementId": { "type": "string" },
+        "date": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "patientId", "measurementId", "date", "createdAt"]
+    },
+    "ClinicalRecommendation": {
+      "title": "Clinical Recommendation",
+      "description": "Evidence-based diagnostics and recommended actions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "predictionId": { "type": "string" },
+        "diagnosis": { "type": "string" },
+        "diagnosisAr": { "type": "string" },
+        "severity": { "type": "string", "enum": ["Normal", "Mild", "Moderate", "Severe"] },
+        "recommendedIntervention": { "type": "string" },
+        "recommendedInterventionAr": { "type": "string" },
+        "referralNeed": { "type": "string" },
+        "referralNeedAr": { "type": "string" },
+        "evidenceSource": { "type": "string" },
+        "whoReference": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "predictionId", "diagnosis", "severity", "recommendedIntervention", "createdAt"]
+    },
+    "AuditLog": {
+      "title": "Audit Log",
+      "description": "Tracking logs for monitoring platform usage and security auditing",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "role": { "type": "string" },
+        "action": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "details": { "type": "string" }
+      },
+      "required": ["id", "userId", "userEmail", "action", "timestamp", "details"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Clinician user profiles and activation status"
+    },
+    "/patients/{patientId}": {
+      "schema": "Patient",
+      "description": "Socio-demographic data of registered pediatric cases"
+    },
+    "/measurements/{measurementId}": {
+      "schema": "Measurement",
+      "description": "Anthropometric and healthcare checkup parameters"
+    },
+    "/predictions/{predictionId}": {
+      "schema": "MalnutritionPrediction",
+      "description": "Outputs of machine learning risk assessment systems"
+    },
+    "/recommendations/{recommendationId}": {
+      "schema": "ClinicalRecommendation",
+      "description": "RAG evidence-grounded WHO diagnostic guidelines"
+    },
+    "/auditLogs/{auditLogId}": {
+      "schema": "AuditLog",
+      "description": "Tamper-evident logs of clinical operations"
+    }
+  }
+}

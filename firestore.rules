@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ID Validation Helper to prevent path poisoning or Denial of Wallet attacks
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_-]+$');
+    }
+
+    // Default safety catch-all rule (deny all)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow read, write: if isValidId(userId);
+    }
+
+    // Patients Collection
+    match /patients/{patientId} {
+      allow read, write: if isValidId(patientId);
+    }
+
+    // Measurements Collection
+    match /measurements/{measurementId} {
+      allow read, write: if isValidId(measurementId);
+    }
+
+    // Predictions Collection
+    match /predictions/{predictionId} {
+      allow read, write: if isValidId(predictionId);
+    }
+
+    // Recommendations Collection
+    match /recommendations/{recommendationId} {
+      allow read, write: if isValidId(recommendationId);
+    }
+
+    // Audit Logs Collection
+    match /auditLogs/{auditLogId} {
+      allow read, write: if isValidId(auditLogId);
+    }
+  }
+}

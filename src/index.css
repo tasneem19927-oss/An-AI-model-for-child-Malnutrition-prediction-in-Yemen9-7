@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@layer utilities {
+  /* Dynamic custom loader animation */
+  @keyframes loader {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(0%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .animate-loader {
+    animation: loader 2s infinite linear;
+  }
+
+  /* Spin slow for sync wheels */
+  @keyframes spin-slow {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .animate-spin-slow {
+    animation: spin-slow 8s infinite linear;
+  }
+}
+
+/* Print utility style rules to format WHO Clinical Health Report */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .print\:hidden {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
