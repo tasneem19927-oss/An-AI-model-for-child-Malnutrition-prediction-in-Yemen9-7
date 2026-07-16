@@ -16,35 +16,35 @@ export const ivfClusters: IVFCluster[] = [
     name: "Child Growth Standards & Anthropometrics",
     nameAr: "معايير نمو الطفل والقياسات الأنثروبومترية",
     centroidKeywords: ["who", "z-score", "stunting", "underweight", "haz", "waz", "growth", "height", "weight", "standard", "معايير", "نمو", "تقزم", "طبيعي", "طول", "وزن"],
-    refIds: ["REF-001", "REF-002", "REF-003", "REF-004", "REF-005", "REF-010"]
+    refIds: ["REF-001", "REF-002", "REF-003", "REF-004", "REF-005", "REF-010", "REF-029"]
   },
   {
     id: 2,
     name: "Machine Learning & AI in Nutrition",
     nameAr: "الذكاء الاصطناعي والتعلم الآلي في التغذية",
     centroidKeywords: ["machine learning", "xgboost", "predictive", "shap", "neural", "precision", "algorithm", "lstm", "data-driven", "ai", "تعلم الآلة", "تنبؤ", "ذكاء اصطناعي", "نموذج"],
-    refIds: ["REF-006", "REF-007", "REF-008", "REF-018", "REF-021"]
+    refIds: ["REF-006", "REF-007", "REF-008", "REF-018", "REF-021", "REF-030", "REF-031", "REF-032"]
   },
   {
     id: 3,
     name: "SAM, Wasting & Therapeutic Protocols",
     nameAr: "سوء التغذية الحاد (SAM) والبروتوكولات العلاجية",
     centroidKeywords: ["wasting", "sam", "oedema", "rutf", "f-75", "f-100", "therapeutic", "rehydration", "stabilization", "complications", "هزال", "علاج", "حليب", "غذائي", "وذمة", "علاجي"],
-    refIds: ["REF-005", "REF-011", "REF-013", "REF-025"]
+    refIds: ["REF-005", "REF-011", "REF-013", "REF-025", "REF-026", "REF-027"]
   },
   {
     id: 4,
     name: "Maternal Health, Breastfeeding & complementary feeding",
     nameAr: "صحة الأم والرضاعة الطبيعية والتغذية التكميلية",
     centroidKeywords: ["breastfeeding", "complementary", "maternal", "infant", "young child", "dietary", "diversity", "micronutrient", "milk", "رضاعة", "طبيعية", "الأم", "حليب الأم", "تغذية تكميلية", "فطام"],
-    refIds: ["REF-012", "REF-014", "REF-015", "REF-016", "REF-017", "REF-020"]
+    refIds: ["REF-012", "REF-014", "REF-015", "REF-016", "REF-017", "REF-020", "REF-034"]
   },
   {
     id: 5,
     name: "Humanitarian Nutrition, Policy & Global reports",
     nameAr: "التغذية الإنسانية والسياسات الصحية والتقارير العالمية",
     centroidKeywords: ["humanitarian", "unicef", "global report", "policy", "sdg", "equity", "poverty", "food systems", "conflict", "تقرير", "عالمي", "إنساني", "يونسيف", "سياسات", "فقر", "يمن"],
-    refIds: ["REF-002", "REF-013", "REF-014", "REF-017", "REF-019", "REF-022"]
+    refIds: ["REF-002", "REF-013", "REF-014", "REF-017", "REF-019", "REF-022", "REF-027", "REF-028", "REF-032", "REF-033", "REF-035"]
   }
 ];
 
@@ -351,7 +351,28 @@ function executeFaissRetrieval(
       }
     });
 
-    const finalScore = Math.min(1.0, baseScore + entityBoost);
+    // Prioritize WHO and Yemen MoPHP protocols with an additional score boost
+    let priorityBoost = 0;
+    const org = ref.organization ? ref.organization.toLowerCase() : "";
+    const title = ref.title ? ref.title.toLowerCase() : "";
+    const titleAr = ref.titleAr ? ref.titleAr.toLowerCase() : "";
+
+    if (
+      org.includes("who") ||
+      org.includes("world health organization") ||
+      org.includes("mophp") ||
+      org.includes("yemen") ||
+      title.includes("who") ||
+      titleAr.includes("منظمة الصحة العالمية") ||
+      titleAr.includes("اليمني") ||
+      ref.id === "REF-026" ||
+      ref.id === "REF-027" ||
+      ref.id === "REF-029"
+    ) {
+      priorityBoost += 0.15; // Substantial boost to prioritize these crucial medical protocols
+    }
+
+    const finalScore = Math.min(1.0, baseScore + entityBoost + priorityBoost);
 
     return {
       reference: ref,
@@ -426,15 +447,15 @@ export function generateClinicalReasoning(
   const isUnderweight = prediction.underweight.severityClass !== "Normal";
 
   // Formulate clinical RAG query based on findings & entities
-  let clinicalQuery = "Malnutrition screening standards";
+  let clinicalQuery = "Malnutrition screening standards WHO Child Growth Standards";
   if (oedema) {
-    clinicalQuery = "Management protocol for severe wasting and nutritional oedema in children";
+    clinicalQuery = "WHO Guideline on the Prevention and Management of Wasting and Nutritional Oedema Yemen IMAM/CMAM Simplified Protocol";
   } else if (prediction.wasting.severityClass === "Severe" || (muacMm && muacMm < 115)) {
-    clinicalQuery = "Management protocol for severe wasting ready-to-use therapeutic food RUTF";
+    clinicalQuery = "Yemen IMAM/CMAM Simplified Protocol severe acute malnutrition SAM RUTF WHO Guideline";
   } else if (prediction.wasting.severityClass === "Moderate" || (muacMm && muacMm < 125)) {
-    clinicalQuery = "Management of moderate acute malnutrition MAM supplementary feeding";
+    clinicalQuery = "Management of moderate acute malnutrition MAM supplementary feeding Yemen Protocol";
   } else if (isStunting) {
-    clinicalQuery = "Preventing stunting child growth standards dietary diversity complementary feeding";
+    clinicalQuery = "Preventing stunting child growth standards dietary diversity complementary feeding UNICEF IYCF";
   }
 
   // Extract symptoms/disease words from entities to enrich the search query

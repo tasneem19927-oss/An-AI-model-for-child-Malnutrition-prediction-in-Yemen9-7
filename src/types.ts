@@ -87,6 +87,11 @@ export interface ScientificReference {
   sourceUrl: string;
   approvedByAdmin: boolean;
   approvedByDoctor: boolean;
+  doi?: string;
+  category?: string;
+  priority?: "Critical" | "High" | "Medium" | "Low" | string;
+  language?: "English" | "Arabic" | "Bilingual" | string;
+  status?: "Active" | "Draft" | "Archived" | string;
 }
 
 export interface NEREntity {
