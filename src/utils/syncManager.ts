@@ -208,7 +208,7 @@ class SyncManager {
         type: "Upload" as const,
         recordsSynced: pending.length,
         status: "Success" as const,
-        details: `Successfully uploaded ${pending.length} queued records to central registry. Deduplicated and verified.`
+        details: `Successfully uploaded ${pending.length} queued records to central registry. Deduplicated and verified. / تم رفع عدد ${pending.length} سجل بنجاح إلى السجل المركزي. تم منع التكرار والتدقيق.`
       };
       await indexedDbService.addSyncLog(localLog);
 
@@ -224,7 +224,7 @@ class SyncManager {
       return {
         success: true,
         syncedCount: pending.length,
-        message: `Synchronization completed successfully! Uploaded ${pending.length} cached records.`
+        message: `Synchronization completed successfully! Uploaded ${pending.length} cached records. / اكتملت المزامنة بنجاح! تم رفع عدد ${pending.length} سجل مخزن مؤقتاً.`
       };
 
     } catch (e: any) {

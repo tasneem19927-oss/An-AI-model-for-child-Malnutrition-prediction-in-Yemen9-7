@@ -34,7 +34,8 @@ import {
   X,
   BookOpen,
   Award,
-  AlertCircle
+  AlertCircle,
+  Menu
 } from "lucide-react";
 
 export default function App() {
@@ -60,6 +61,7 @@ export default function App() {
   const [globalSearchStepsCompleted, setGlobalSearchStepsCompleted] = useState<string[]>([]);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginError, setLoginError] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const t = translations[lang];
 
@@ -399,9 +401,6 @@ export default function App() {
             <h1 className="text-xl font-bold tracking-tight text-slate-900">
               {lang === "en" ? "AI model for child Malnutrition prediction" : "نموذج الذكاء الاصطناعي للتنبؤ بسوء التغذية لدى الأطفال"}
             </h1>
-            <p className="text-xs text-slate-400 font-semibold max-w-xs mx-auto">
-              Yemen Pediatric Health Coordination Portal & Clinical Decision Support System
-            </p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
@@ -528,7 +527,6 @@ export default function App() {
         {/* Footer info block */}
         <div className="text-center text-[10px] text-slate-400 font-bold max-w-sm mx-auto space-y-1">
           <p>YEMEN CHILD MALNUTRITION PREDICTION PLATFORM</p>
-          <p>Local MLOps Engines Ready. Active offline-first diagnostics capabilities enabled on low-resource devices.</p>
         </div>
       </div>
     );
@@ -544,19 +542,19 @@ export default function App() {
               <Heart className="w-6 h-6 text-[#008DC9] animate-pulse" />
             </div>
             <div>
-              <h1 className="text-sm font-bold leading-none tracking-tight">
+              <h1 className="text-xs sm:text-sm font-bold leading-none tracking-tight">
                 YEMEN CLINICAL SUPPORT
               </h1>
-              <span className="text-[10px] text-blue-100 opacity-90 font-medium uppercase tracking-widest mt-1 block">
+              <span className="hidden sm:block text-[10px] text-blue-100 opacity-90 font-medium uppercase tracking-widest mt-1">
                 AI model for child Malnutrition prediction | MICS6 Engine
               </span>
             </div>
           </div>
 
           {/* Quick Header System Status Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Clock */}
-            <span className="text-[11px] font-semibold text-white/95 tracking-wider bg-white/10 border border-white/20 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
+            <span className="hidden lg:flex text-[11px] font-semibold text-white/95 tracking-wider bg-white/10 border border-white/20 px-2.5 py-1.5 rounded-lg items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" />
               {timeStr}
             </span>
@@ -564,35 +562,35 @@ export default function App() {
             {/* Language Selection */}
             <button
               onClick={() => setLang(lang === "en" ? "ar" : "en")}
-              className="text-xs font-semibold text-white hover:text-white bg-white/10 hover:bg-white/20 border border-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="text-xs font-semibold text-white hover:text-white bg-white/10 hover:bg-white/20 border border-white/20 px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
             >
               <Globe className="w-3.5 h-3.5" />
-              {lang === "en" ? "العربية" : "English"}
+              <span className="hidden sm:inline">{lang === "en" ? "العربية" : "English"}</span>
             </button>
 
             {/* Connection Toggle */}
             <button
               onClick={() => syncManager.toggleOnlineSimulator(!online)}
               title={lang === "en" ? "Toggle connection mode simulation" : "تبديل محاكاة حالة الاتصال بالشبكة"}
-              className={`text-xs font-bold px-3 py-1 rounded-lg flex flex-col items-center gap-0.5 transition-all border cursor-pointer ${
+              className={`text-xs font-bold px-2 py-1 sm:px-3 sm:py-1 rounded-lg flex flex-col items-center gap-0.5 transition-all border cursor-pointer ${
                 online 
                   ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25" 
                   : "bg-rose-500/10 text-rose-300 border-rose-500/30 hover:bg-rose-500/25"
               }`}
             >
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1 sm:gap-1.5">
                 <span className={`w-1.5 h-1.5 rounded-full ${online ? "bg-emerald-400 animate-pulse" : "bg-rose-500"}`} />
                 {online ? <Wifi className="w-3.5 h-3.5 text-emerald-400" /> : <WifiOff className="w-3.5 h-3.5 text-rose-400" />}
-                <span>{online ? "ONLINE" : "OFFLINE"}</span>
+                <span className="hidden sm:inline">{online ? "ONLINE" : "OFFLINE"}</span>
               </div>
-              <span className="text-[8px] opacity-80 font-mono tracking-tight font-medium">
+              <span className="hidden sm:block text-[8px] opacity-80 font-mono tracking-tight font-medium">
                 Sync: {syncState.lastSyncTime ? new Date(syncState.lastSyncTime).toLocaleTimeString(lang === "en" ? "en-US" : "ar-YE") : (lang === "en" ? "Never" : "لا يوجد")}
               </span>
             </button>
 
             {/* User Session */}
-            <div className="h-8 w-[1px] bg-white/20" />
-            <div className="flex items-center gap-3">
+            <div className="hidden md:block h-8 w-[1px] bg-white/20" />
+            <div className="hidden md:flex items-center gap-3">
               <div className="text-right">
                 <span className="text-xs font-bold block leading-none">{currentUser.name}</span>
                 <span className="text-[9px] bg-white/20 text-white border border-white/20 px-2 py-0.5 rounded-full font-bold uppercase block mt-1 w-max ml-auto">
@@ -607,9 +605,210 @@ export default function App() {
                 <LogOut className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Hamburger Menu Toggle Button for Mobile/Tablet */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer flex items-center justify-center shrink-0"
+              aria-label="Toggle Clinical Menu"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
       </header>
+
+      {/* Mobile Menu Dropdown Panel */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-white border-b border-slate-200 shadow-xl transition-all z-30 relative py-4 px-4 space-y-4 print:hidden">
+          {/* User Session Profile Header */}
+          <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between">
+            <div>
+              <span className="text-xs font-bold text-slate-400 block uppercase tracking-wider">
+                {lang === "en" ? "Active User" : "المستخدم الحالي"}
+              </span>
+              <span className="text-sm font-extrabold text-slate-800 block mt-0.5">{currentUser?.name}</span>
+              <span className="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-bold uppercase inline-block mt-1">
+                {currentUser?.role}
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                handleLogout();
+              }}
+              className="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-100 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>{lang === "en" ? "Logout" : "تسجيل الخروج"}</span>
+            </button>
+          </div>
+
+          {/* Navigation Links (Clinical Menu) */}
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mb-2">
+              {lang === "en" ? "Clinical Menu" : "القائمة الطبية"}
+            </p>
+
+            <button
+              onClick={() => {
+                setActiveTab("nurse");
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2.5 ${
+                activeTab === "nurse"
+                  ? "bg-slate-100 text-[#008DC9] border-l-4 border-[#008DC9] shadow-sm"
+                  : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              <Activity className="w-4 h-4 text-[#008DC9]" />
+              {t.measurementsEntry}
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab("doctor");
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2.5 ${
+                activeTab === "doctor"
+                  ? "bg-slate-100 text-[#008DC9] border-l-4 border-[#008DC9] shadow-sm"
+                  : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              <ShieldAlert className="w-4 h-4 text-[#008DC9]" />
+              {t.recommendations}
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab("sync_dashboard");
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2.5 ${
+                activeTab === "sync_dashboard"
+                  ? "bg-slate-100 text-[#008DC9] border-l-4 border-[#008DC9] shadow-sm"
+                  : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              <RefreshCw className={`w-4 h-4 text-[#008DC9] ${syncState.syncInProgress ? 'animate-spin' : ''}`} />
+              {lang === "en" ? "Offline Sync Hub" : "مركز المزامنة دون اتصال"}
+              {syncState.pendingRecordsCount > 0 && (
+                <span className="ml-auto text-[10px] bg-orange-100 text-orange-800 font-extrabold px-1.5 py-0.5 rounded-full animate-pulse">
+                  {syncState.pendingRecordsCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab("records_sync");
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2.5 ${
+                activeTab === "records_sync"
+                  ? "bg-slate-100 text-[#008DC9] border-l-4 border-[#008DC9] shadow-sm"
+                  : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              <Files className="w-4 h-4 text-[#008DC9]" />
+              {lang === "en" ? "Records & Sync" : "السجلات والمزامنة"}
+              {syncState.pendingRecordsCount > 0 ? (
+                <span className="ml-auto text-[10px] bg-rose-100 text-rose-800 font-extrabold px-1.5 py-0.5 rounded-full animate-pulse">
+                  {syncState.pendingRecordsCount}
+                </span>
+              ) : (
+                <span className="ml-auto text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.5 rounded-full">
+                  ✓
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab("kb");
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2.5 ${
+                activeTab === "kb"
+                  ? "bg-slate-100 text-[#008DC9] border-l-4 border-[#008DC9] shadow-sm"
+                  : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              <Database className="w-4 h-4 text-[#008DC9]" />
+              {lang === "en" ? "Guidelines Library" : "المكتبة الإرشادية الطبية"}
+            </button>
+
+            {currentUser?.role !== "Nurse" && (
+              <>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mt-4 mb-2">Analytics & Models</p>
+
+                <button
+                  onClick={() => {
+                    setActiveTab("analytics");
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2.5 ${
+                    activeTab === "analytics"
+                      ? "bg-slate-100 text-[#008DC9] border-l-4 border-[#008DC9] shadow-sm"
+                      : "text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  <BarChart3 className="w-4 h-4 text-[#008DC9]" />
+                  {lang === "en" ? "Malnutrition Analytics" : "إحصائيات سوء التغذية"}
+                </button>
+
+                {currentUser?.role !== "Doctor" && (
+                  <button
+                    onClick={() => {
+                      setActiveTab("ai_monitoring");
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2.5 ${
+                      activeTab === "ai_monitoring"
+                        ? "bg-slate-100 text-[#008DC9] border-l-4 border-[#008DC9] shadow-sm"
+                        : "text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    <Server className="w-4 h-4 text-[#008DC9]" />
+                    {lang === "en" ? "AI & NER Engine Sandbox" : "بيئة تجربة محرك الذكاء الاصطناعي"}
+                  </button>
+                )}
+              </>
+            )}
+
+            {currentUser?.role === "Administrator" && (
+              <>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mt-4 mb-2">Administrative Portals</p>
+                <button
+                  onClick={() => {
+                    setActiveTab("admin");
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2.5 ${
+                    activeTab === "admin"
+                      ? "bg-slate-100 text-[#008DC9] border-l-4 border-[#008DC9] shadow-sm"
+                      : "text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  <Settings className="w-4 h-4 text-[#008DC9]" />
+                  {t.userManagement}
+                </button>
+              </>
+            )}
+
+            {currentUser?.role !== "Doctor" && currentUser?.role !== "Nurse" && (
+              <div className="pt-4 border-t border-slate-100">
+                <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                  <p className="text-[10px] font-bold text-[#008DC9] uppercase mb-1">Edge AI Model</p>
+                  <p className="text-xs text-blue-900 font-semibold">v2.4.0 ONNX Loaded</p>
+                  <p className="text-[10px] text-slate-500 mt-1 font-medium">Quantization INT8: OK</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Global AI Search Panel */}
       <div className="bg-slate-100 border-b border-slate-200 py-6 print:hidden">
@@ -796,47 +995,52 @@ export default function App() {
       </div>
 
       {/* Main Container Layout */}
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row gap-6 overflow-hidden">
+      <div className="flex-1 max-w-7xl w-full mx-auto px-1 sm:px-6 lg:px-8 py-3 sm:py-6 flex flex-row gap-1.5 sm:gap-6 overflow-hidden">
         {/* Sidebar Navigation */}
-        <aside className="w-full md:w-64 bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-1.5 shrink-0 shadow-sm print:hidden" id="nav-sidebar">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mb-2">Clinical Menu</p>
+        <aside className="flex w-12 sm:w-16 md:w-64 bg-white border border-slate-200 rounded-2xl p-1 sm:p-2 md:p-4 flex-col gap-1.5 shrink-0 shadow-sm print:hidden transition-all duration-300" id="nav-sidebar">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mb-2 hidden md:block">Clinical Menu</p>
           
           <button
             onClick={() => setActiveTab("nurse")}
-            className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2.5 ${
+            className={`w-full text-left px-1 sm:px-2 md:px-3 py-2 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all flex items-center justify-center md:justify-start gap-1.5 sm:gap-2.5 ${
               activeTab === "nurse" 
                 ? "bg-slate-100 text-[#008DC9] border-l-4 border-[#008DC9] shadow-sm" 
                 : "text-slate-600 hover:bg-slate-50"
             }`}
           >
-            <Activity className="w-4 h-4 text-[#008DC9]" />
-            {t.measurementsEntry}
+            <Activity className="w-4 h-4 text-[#008DC9] shrink-0" />
+            <span className="hidden md:block">{t.measurementsEntry}</span>
           </button>
 
           <button
             onClick={() => setActiveTab("doctor")}
-            className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2.5 ${
+            className={`w-full text-left px-1 sm:px-2 md:px-3 py-2 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all flex items-center justify-center md:justify-start gap-1.5 sm:gap-2.5 ${
               activeTab === "doctor" 
                 ? "bg-slate-100 text-[#008DC9] border-l-4 border-[#008DC9] shadow-sm" 
                 : "text-slate-600 hover:bg-slate-50"
             }`}
           >
-            <ShieldAlert className="w-4 h-4 text-[#008DC9]" />
-            {t.recommendations}
+            <ShieldAlert className="w-4 h-4 text-[#008DC9] shrink-0" />
+            <span className="hidden md:block">{t.recommendations}</span>
           </button>
 
           <button
             onClick={() => setActiveTab("sync_dashboard")}
-            className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2.5 ${
+            className={`w-full text-left px-1 sm:px-2 md:px-3 py-2 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all flex items-center justify-center md:justify-start gap-1.5 sm:gap-2.5 ${
               activeTab === "sync_dashboard" 
                 ? "bg-slate-100 text-[#008DC9] border-l-4 border-[#008DC9] shadow-sm" 
                 : "text-slate-600 hover:bg-slate-50"
             }`}
           >
-            <RefreshCw className={`w-4 h-4 text-[#008DC9] ${syncState.syncInProgress ? 'animate-spin' : ''}`} />
-            {lang === "en" ? "Offline Sync Hub" : "مركز المزامنة دون اتصال"}
+            <div className="relative">
+              <RefreshCw className={`w-4 h-4 text-[#008DC9] shrink-0 ${syncState.syncInProgress ? 'animate-spin' : ''}`} />
+              {syncState.pendingRecordsCount > 0 && (
+                <span className="md:hidden absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+              )}
+            </div>
+            <span className="hidden md:block">{lang === "en" ? "Offline Sync Hub" : "مركز المزامنة دون اتصال"}</span>
             {syncState.pendingRecordsCount > 0 && (
-              <span className="ml-auto text-[10px] bg-orange-100 text-orange-800 font-extrabold px-1.5 py-0.5 rounded-full animate-pulse">
+              <span className="hidden md:inline-block ml-auto text-[10px] bg-orange-100 text-orange-800 font-extrabold px-1.5 py-0.5 rounded-full animate-pulse">
                 {syncState.pendingRecordsCount}
               </span>
             )}
@@ -844,20 +1048,25 @@ export default function App() {
 
           <button
             onClick={() => setActiveTab("records_sync")}
-            className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2.5 ${
+            className={`w-full text-left px-1 sm:px-2 md:px-3 py-2 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all flex items-center justify-center md:justify-start gap-1.5 sm:gap-2.5 ${
               activeTab === "records_sync" 
                 ? "bg-slate-100 text-[#008DC9] border-l-4 border-[#008DC9] shadow-sm" 
                 : "text-slate-600 hover:bg-slate-50"
             }`}
           >
-            <Files className="w-4 h-4 text-[#008DC9]" />
-            {lang === "en" ? "Records & Sync" : "السجلات والمزامنة"}
+            <div className="relative">
+              <Files className="w-4 h-4 text-[#008DC9] shrink-0" />
+              {syncState.pendingRecordsCount > 0 && (
+                <span className="md:hidden absolute -top-1 -right-1 w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
+              )}
+            </div>
+            <span className="hidden md:block">{lang === "en" ? "Records & Sync" : "السجلات والمزامنة"}</span>
             {syncState.pendingRecordsCount > 0 ? (
-              <span className="ml-auto text-[10px] bg-rose-100 text-rose-800 font-extrabold px-1.5 py-0.5 rounded-full animate-pulse">
+              <span className="hidden md:inline-block ml-auto text-[10px] bg-rose-100 text-rose-800 font-extrabold px-1.5 py-0.5 rounded-full animate-pulse">
                 {syncState.pendingRecordsCount}
               </span>
             ) : (
-              <span className="ml-auto text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.5 rounded-full">
+              <span className="hidden md:inline-block ml-auto text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.5 rounded-full">
                 ✓
               </span>
             )}
@@ -865,81 +1074,85 @@ export default function App() {
 
           <button
             onClick={() => setActiveTab("kb")}
-            className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2.5 ${
+            className={`w-full text-left px-1 sm:px-2 md:px-3 py-2 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all flex items-center justify-center md:justify-start gap-1.5 sm:gap-2.5 ${
               activeTab === "kb" 
                 ? "bg-slate-100 text-[#008DC9] border-l-4 border-[#008DC9] shadow-sm" 
                 : "text-slate-600 hover:bg-slate-50"
             }`}
           >
-            <Database className="w-4 h-4 text-[#008DC9]" />
-            {lang === "en" ? "Guidelines Library" : "المكتبة الإرشادية الطبية"}
+            <Database className="w-4 h-4 text-[#008DC9] shrink-0" />
+            <span className="hidden md:block">{lang === "en" ? "Guidelines Library" : "المكتبة الإرشادية الطبية"}</span>
           </button>
 
           {currentUser?.role !== "Nurse" && (
             <>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mt-4 mb-2">Analytics & Models</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mt-4 mb-2 hidden md:block">Analytics & Models</p>
 
               <button
                 onClick={() => setActiveTab("analytics")}
-                className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2.5 ${
+                className={`w-full text-left px-1 sm:px-2 md:px-3 py-2 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all flex items-center justify-center md:justify-start gap-1.5 sm:gap-2.5 ${
                   activeTab === "analytics" 
                     ? "bg-slate-100 text-[#008DC9] border-l-4 border-[#008DC9] shadow-sm" 
                     : "text-slate-600 hover:bg-slate-50"
                 }`}
               >
-                <BarChart3 className="w-4 h-4 text-[#008DC9]" />
-                {lang === "en" ? "Malnutrition Analytics" : "إحصائيات سوء التغذية"}
+                <BarChart3 className="w-4 h-4 text-[#008DC9] shrink-0" />
+                <span className="hidden md:block">{lang === "en" ? "Malnutrition Analytics" : "إحصائيات سوء التغذية"}</span>
               </button>
 
-              <button
-                onClick={() => setActiveTab("ai_monitoring")}
-                className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2.5 ${
-                  activeTab === "ai_monitoring" 
-                    ? "bg-slate-100 text-[#008DC9] border-l-4 border-[#008DC9] shadow-sm" 
-                    : "text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                <Server className="w-4 h-4 text-[#008DC9]" />
-                {lang === "en" ? "AI & NER Engine Sandbox" : "بيئة تجربة محرك الذكاء الاصطناعي"}
-              </button>
+              {currentUser?.role !== "Doctor" && (
+                <button
+                  onClick={() => setActiveTab("ai_monitoring")}
+                  className={`w-full text-left px-1 sm:px-2 md:px-3 py-2 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all flex items-center justify-center md:justify-start gap-1.5 sm:gap-2.5 ${
+                    activeTab === "ai_monitoring" 
+                      ? "bg-slate-100 text-[#008DC9] border-l-4 border-[#008DC9] shadow-sm" 
+                      : "text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  <Server className="w-4 h-4 text-[#008DC9] shrink-0" />
+                  <span className="hidden md:block">{lang === "en" ? "AI & NER Engine Sandbox" : "بيئة تجربة محرك الذكاء الاصطناعي"}</span>
+                </button>
+              )}
             </>
           )}
 
           {/* Admin RBAC Tab */}
           {currentUser?.role === "Administrator" && (
             <>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mt-4 mb-2">Administrative Portals</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mt-4 mb-2 hidden md:block">Administrative Portals</p>
               <button
                 onClick={() => setActiveTab("admin")}
-                className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2.5 ${
+                className={`w-full text-left px-1 sm:px-2 md:px-3 py-2 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all flex items-center justify-center md:justify-start gap-1.5 sm:gap-2.5 ${
                   activeTab === "admin" 
                     ? "bg-slate-100 text-[#008DC9] border-l-4 border-[#008DC9] shadow-sm" 
                     : "text-slate-600 hover:bg-slate-50"
                 }`}
               >
-                <Settings className="w-4 h-4 text-[#008DC9]" />
-                {t.userManagement}
+                <Settings className="w-4 h-4 text-[#008DC9] shrink-0" />
+                <span className="hidden md:block">{t.userManagement}</span>
               </button>
             </>
           )}
 
-          <div className="mt-auto pt-4 border-t border-slate-100">
-            <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg">
-              <p className="text-[10px] font-bold text-[#008DC9] uppercase mb-1">Edge AI Model</p>
-              <p className="text-xs text-blue-900 font-semibold">v2.4.0 ONNX Loaded</p>
-              <p className="text-[10px] text-slate-500 mt-1 font-medium">Quantization INT8: OK</p>
+          {currentUser?.role !== "Doctor" && currentUser?.role !== "Nurse" && (
+            <div className="mt-auto pt-4 border-t border-slate-100 hidden md:block">
+              <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                <p className="text-[10px] font-bold text-[#008DC9] uppercase mb-1">Edge AI Model</p>
+                <p className="text-xs text-blue-900 font-semibold">v2.4.0 ONNX Loaded</p>
+                <p className="text-[10px] text-slate-500 mt-1 font-medium">Quantization INT8: OK</p>
+              </div>
             </div>
-          </div>
+          )}
         </aside>
 
         {/* Content View Routing Area */}
         <main className="flex-1 overflow-y-auto">
           {activeTab === "nurse" && (
-            <NurseDashboard lang={lang} onLogAudit={handleLogAuditOnServer} online={online} />
+            <NurseDashboard lang={lang} onLogAudit={handleLogAuditOnServer} online={online} userRole={currentUser?.role} />
           )}
 
           {activeTab === "doctor" && (
-            <DoctorDashboard lang={lang} onLogAudit={handleLogAuditOnServer} online={online} />
+            <DoctorDashboard lang={lang} onLogAudit={handleLogAuditOnServer} online={online} userRole={currentUser?.role} />
           )}
 
           {activeTab === "kb" && (

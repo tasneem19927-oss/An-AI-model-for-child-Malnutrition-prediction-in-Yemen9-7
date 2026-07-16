@@ -339,18 +339,20 @@ export function SyncDashboard({ lang, currentUser }: SyncDashboardProps) {
       </div>
 
       {/* Security Check Banner */}
-      <div className="bg-slate-900 text-white p-4 rounded-xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
-        <div className="flex items-center gap-2.5">
-          <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
-          <div>
-            <span className="text-xs font-bold block">{curT.securityVerify}</span>
-            <span className="text-[10px] text-slate-400 font-semibold block">{curT.mappingNote}</span>
+      {currentUser?.role !== "Doctor" && currentUser?.role !== "Nurse" && (
+        <div className="bg-slate-900 text-white p-4 rounded-xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+          <div className="flex items-center gap-2.5">
+            <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+            <div>
+              <span className="text-xs font-bold block">{curT.securityVerify}</span>
+              <span className="text-[10px] text-slate-400 font-semibold block">{curT.mappingNote}</span>
+            </div>
           </div>
+          <span className="text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full uppercase tracking-widest uppercase shrink-0">
+            AES-256 REST + JWT SECURE
+          </span>
         </div>
-        <span className="text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full uppercase tracking-widest uppercase shrink-0">
-          AES-256 REST + JWT SECURE
-        </span>
-      </div>
+      )}
 
       {/* Pending Queue Records Panel */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">

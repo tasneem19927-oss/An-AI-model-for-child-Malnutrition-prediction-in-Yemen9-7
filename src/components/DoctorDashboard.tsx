@@ -10,9 +10,10 @@ interface DoctorDashboardProps {
   lang: Language;
   onLogAudit: (action: string, details: string) => void;
   online: boolean;
+  userRole?: string;
 }
 
-export function DoctorDashboard({ lang, onLogAudit, online }: DoctorDashboardProps) {
+export function DoctorDashboard({ lang, onLogAudit, online, userRole }: DoctorDashboardProps) {
   const t = translations[lang];
   
   // Patients list state
@@ -22,6 +23,9 @@ export function DoctorDashboard({ lang, onLogAudit, online }: DoctorDashboardPro
   // Selected Patient states
   const [selectedPatientId, setSelectedPatientId] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
+  const [editAgeMonths, setEditAgeMonths] = useState("");
+  const [isUpdatingAge, setIsUpdatingAge] = useState(false);
+  const [ageUpdateSuccess, setAgeUpdateSuccess] = useState(false);
 
   // Diagnostics State
   const [diagnostics, setDiagnostics] = useState<{
@@ -163,6 +167,7 @@ export function DoctorDashboard({ lang, onLogAudit, online }: DoctorDashboardPro
   const loadPatientDiagnostic = async (patient: any) => {
     setSelectedPatientId(patient.id);
     setSelectedPatient(patient);
+    setEditAgeMonths(patient.ageMonths ? String(patient.ageMonths) : "");
     setClinicalNotes("");
     
     try {
@@ -179,6 +184,52 @@ export function DoctorDashboard({ lang, onLogAudit, online }: DoctorDashboardPro
       loadDiagnosticsOffline(patient.id);
       loadPatientHistory(patient.id);
     }
+  };
+
+  const handleUpdatePatientAge = async () => {
+    if (!selectedPatient || !editAgeMonths) return;
+    setIsUpdatingAge(true);
+    setAgeUpdateSuccess(false);
+    const newAge = Number(editAgeMonths);
+
+    // 1. Update in local state
+    const updatedPatient = { ...selectedPatient, ageMonths: newAge };
+    setSelectedPatient(updatedPatient);
+    setPatients(prev => prev.map(p => p.id === selectedPatient.id ? updatedPatient : p));
+
+    // 2. Update in IndexedDB
+    try {
+      await indexedDbService.savePatient(updatedPatient);
+    } catch (err) {
+      console.error("IndexedDB patient update failed", err);
+    }
+
+    // 3. Update on server if online
+    if (online) {
+      try {
+        const res = await fetch(`/api/patients/${selectedPatient.id}/update-age`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ageMonths: newAge,
+            userId: "DOCTOR",
+            userEmail: "doctor@facility.gov.ye",
+            userRole: "Doctor"
+          })
+        });
+        if (res.ok) {
+          setAgeUpdateSuccess(true);
+          setTimeout(() => setAgeUpdateSuccess(false), 3000);
+        }
+      } catch (err) {
+        console.error("Server patient update failed", err);
+      }
+    } else {
+      setAgeUpdateSuccess(true);
+      setTimeout(() => setAgeUpdateSuccess(false), 3000);
+    }
+    
+    setIsUpdatingAge(false);
   };
 
   const loadPatientHistory = async (patientId: string) => {
@@ -391,7 +442,7 @@ export function DoctorDashboard({ lang, onLogAudit, online }: DoctorDashboardPro
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6" id="doctor-dashboard-container">
       {/* Patient Selector Sidebar */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-4 h-[calc(100vh-210px)] overflow-y-auto print:hidden">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-4 h-auto max-h-64 lg:h-[calc(100vh-210px)] lg:max-h-none overflow-y-auto print:hidden">
         <div className="relative">
           <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
           <input
@@ -464,6 +515,48 @@ export function DoctorDashboard({ lang, onLogAudit, online }: DoctorDashboardPro
               </div>
             </div>
 
+            {/* Child Age Update Panel */}
+            <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 print:hidden">
+              <div className="space-y-0.5">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                  {lang === "en" ? "Manage Age in Months" : "إدارة عمر الطفل بالأشهر"}
+                </span>
+                <p className="text-xs text-slate-600 font-medium">
+                  {lang === "en" 
+                    ? "Verify and update the child's age in months to ensure accurate z-score calculations and diagnosis."
+                    : "التحقق من عمر الطفل بالأشهر وتحديثه لضمان دقة حسابات الانحراف المعياري والتشخيص."}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="relative w-32">
+                  <input
+                    type="number"
+                    min="0"
+                    max="60"
+                    value={editAgeMonths}
+                    onChange={(e) => setEditAgeMonths(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#008DC9] pr-12"
+                    placeholder="e.g. 18"
+                  />
+                  <span className="absolute right-3 top-2 text-[10px] text-slate-400 font-bold">
+                    {lang === "en" ? "mo" : "شهر"}
+                  </span>
+                </div>
+                <button
+                  onClick={handleUpdatePatientAge}
+                  disabled={isUpdatingAge || !editAgeMonths}
+                  className="bg-[#008DC9] hover:bg-[#005F8A] text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-sm cursor-pointer disabled:opacity-50 flex items-center gap-1.5 shrink-0"
+                >
+                  {isUpdatingAge ? (
+                    <span className="animate-spin text-white">⏳</span>
+                  ) : ageUpdateSuccess ? (
+                    <span className="text-emerald-300">✓</span>
+                  ) : null}
+                  <span>{lang === "en" ? "Update Age" : "تحديث العمر"}</span>
+                </button>
+              </div>
+            </div>
+
             {/* Anthropometric Measurements Display */}
             {activeMeas && (
               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -508,7 +601,7 @@ export function DoctorDashboard({ lang, onLogAudit, online }: DoctorDashboardPro
                 <div className="space-y-4">
                   {/* Trend Velocity Metrics Grid */}
                   {growthTrend && (
-                    <div className="grid grid-cols-3 gap-3 text-center">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
                       <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-xs">
                         <span className="text-[10px] text-slate-400 font-bold block uppercase">Weight Velocity</span>
                         <div className="flex items-center justify-center gap-1.5 mt-1">
@@ -680,10 +773,12 @@ export function DoctorDashboard({ lang, onLogAudit, online }: DoctorDashboardPro
                     </div>
                     <span className="text-3xl font-extrabold text-slate-900 mt-3 block">{activePred.wasting.riskPercentage}%</span>
                   </div>
-                  <div className="text-xs text-slate-500 border-t border-slate-100 pt-3 flex justify-between">
-                    <span>{t.confidence}:</span>
-                    <span className="font-semibold text-slate-800">{activePred.wasting.confidenceScore}%</span>
-                  </div>
+                  {userRole !== "Nurse" && userRole !== "Doctor" && (
+                    <div className="text-xs text-slate-500 border-t border-slate-100 pt-3 flex justify-between">
+                      <span>{t.confidence}:</span>
+                      <span className="font-semibold text-slate-800">{activePred.wasting.confidenceScore}%</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Stunting */}
@@ -703,10 +798,12 @@ export function DoctorDashboard({ lang, onLogAudit, online }: DoctorDashboardPro
                     </div>
                     <span className="text-3xl font-extrabold text-slate-900 mt-3 block">{activePred.stunting.riskPercentage}%</span>
                   </div>
-                  <div className="text-xs text-slate-500 border-t border-slate-100 pt-3 flex justify-between">
-                    <span>{t.confidence}:</span>
-                    <span className="font-semibold text-slate-800">{activePred.stunting.confidenceScore}%</span>
-                  </div>
+                  {userRole !== "Nurse" && userRole !== "Doctor" && (
+                    <div className="text-xs text-slate-500 border-t border-slate-100 pt-3 flex justify-between">
+                      <span>{t.confidence}:</span>
+                      <span className="font-semibold text-slate-800">{activePred.stunting.confidenceScore}%</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Underweight */}
@@ -726,10 +823,12 @@ export function DoctorDashboard({ lang, onLogAudit, online }: DoctorDashboardPro
                     </div>
                     <p className="text-2xl font-bold mt-2 text-slate-800">{activePred.underweight.riskPercentage}%</p>
                   </div>
-                  <div className="border-t border-slate-100 pt-2 flex justify-between text-xs text-slate-500">
-                    <span>{t.confidence}</span>
-                    <span className="font-semibold">{activePred.underweight.confidenceScore}%</span>
-                  </div>
+                  {userRole !== "Nurse" && userRole !== "Doctor" && (
+                    <div className="border-t border-slate-100 pt-2 flex justify-between text-xs text-slate-500">
+                      <span>{t.confidence}</span>
+                      <span className="font-semibold">{activePred.underweight.confidenceScore}%</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -774,19 +873,21 @@ export function DoctorDashboard({ lang, onLogAudit, online }: DoctorDashboardPro
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 print:hidden">
               <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider flex items-center gap-2">
                 <FileText className="w-4 h-4 text-[#008DC9]" />
-                Add Customized Clinical Notes
+                {lang === "ar" ? "إضافة ملاحظات سريرية مخصصة" : "Add Customized Clinical Notes"}
               </h3>
               <textarea
                 value={clinicalNotes}
                 onChange={(e) => setClinicalNotes(e.target.value)}
-                placeholder="e.g. Prescribed RUTF. Follow up in 7 days for clinical progress check."
+                placeholder={lang === "ar" ? "مثال: تم صرف الأغذية العلاجية الجاهزة للاستخدام (RUTF). المتابعة خلال 7 أيام للتحقق من التقدم السريري." : "e.g. Prescribed RUTF. Follow up in 7 days for clinical progress check."}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#008DC9] focus:bg-white transition-all h-24"
               />
               <button
                 onClick={handleSaveNotes}
                 className="bg-[#008DC9] hover:bg-[#007cb2] text-white font-medium py-2 px-5 rounded-lg text-sm transition-colors flex items-center gap-2"
               >
-                {noteSaved ? "Saved successfully!" : "Save Clinical Note"}
+                {noteSaved 
+                  ? (lang === "ar" ? "تم الحفظ بنجاح!" : "Saved successfully!") 
+                  : (lang === "ar" ? "حفظ الملاحظة السريرية" : "Save Clinical Note")}
               </button>
             </div>
           </div>

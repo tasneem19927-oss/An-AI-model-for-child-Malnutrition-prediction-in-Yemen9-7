@@ -469,6 +469,40 @@ async function startServer() {
     res.json({ success: true, patient });
   });
 
+  // Update a patient's age in months
+  app.post("/api/patients/:id/update-age", (req, res) => {
+    const { id } = req.params;
+    const { ageMonths, userId, userEmail, userRole } = req.body;
+    
+    if (ageMonths === undefined || ageMonths === null || ageMonths === "") {
+      return res.status(400).json({ error: "Age in months is required." });
+    }
+
+    const patient = db.patients.find((p) => p.id === id);
+    if (!patient) {
+      return res.status(404).json({ error: "Patient not found." });
+    }
+
+    const oldAge = patient.ageMonths;
+    patient.ageMonths = Number(ageMonths);
+    persistDoc("patients", patient.id, patient);
+
+    // Audit Log
+    const auditEntry = {
+      id: `AUD-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+      userId: userId || "SYSTEM",
+      userEmail: userEmail || "anonymous@facility.gov.ye",
+      role: userRole || "User",
+      action: "Update Patient Age",
+      timestamp: new Date().toISOString(),
+      details: `Updated patient ${patient.name} (${id}) age from ${oldAge} to ${ageMonths} months.`
+    };
+    db.auditLogs.unshift(auditEntry);
+    persistDoc("auditLogs", auditEntry.id, auditEntry);
+
+    res.json({ success: true, patient });
+  });
+
   // 3. MEASUREMENTS & PREDICTION COMBINED API
   app.get("/api/measurements/by-name/:name", (req, res) => {
     const { name } = req.params;
@@ -505,12 +539,18 @@ async function startServer() {
       recordedBy,
       userId,
       userEmail,
-      userRole
+      userRole,
+      ageMonths
     } = req.body;
 
     const patient = db.patients.find((p) => p.id === patientId);
     if (!patient) {
       return res.status(404).json({ error: "Associated patient record not found." });
+    }
+
+    if (ageMonths !== undefined && ageMonths !== null && ageMonths !== "") {
+      patient.ageMonths = Number(ageMonths);
+      persistDoc("patients", patient.id, patient);
     }
 
     const measurement: Measurement = {
@@ -885,6 +925,11 @@ async function startServer() {
           const resolvedPatient = db.patients.find((p) => p.id === finalPatientId);
           if (!resolvedPatient) {
             return; // Skip if no valid child patient found
+          }
+
+          if (meas.ageMonths !== undefined && meas.ageMonths !== null && meas.ageMonths !== "") {
+            resolvedPatient.ageMonths = Number(meas.ageMonths);
+            persistDoc("patients", resolvedPatient.id, resolvedPatient);
           }
 
           const serverMeasId = `MEAS-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;

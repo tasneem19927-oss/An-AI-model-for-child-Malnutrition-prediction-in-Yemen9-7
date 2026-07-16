@@ -128,7 +128,7 @@ export function AnalyticsDashboard({ lang }: AnalyticsDashboardProps) {
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
           <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
             <PieChart className="w-5 h-5 text-purple-600" />
-            Bilingual Demographic Gender Split
+            {lang === "ar" ? "التوزيع الديموغرافي الثنائي للجنسين" : "Bilingual Demographic Gender Split"}
           </h3>
 
           <div className="relative w-48 h-48 mx-auto flex items-center justify-center">
@@ -153,13 +153,21 @@ export function AnalyticsDashboard({ lang }: AnalyticsDashboardProps) {
             </svg>
             <div className="absolute text-center">
               <span className="text-3xl font-black text-slate-900 block">52%</span>
-              <span className="text-[10px] text-slate-400 font-bold block uppercase">Boys vs Girls</span>
+              <span className="text-[10px] text-slate-400 font-bold block uppercase">
+                {lang === "ar" ? "الأولاد مقابل البنات" : "Boys vs Girls"}
+              </span>
             </div>
           </div>
 
           <div className="flex justify-around text-xs font-bold text-slate-700">
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 bg-[#008DC9] rounded-full" /> Boys: 52.4%</span>
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 bg-slate-100 border border-slate-200 rounded-full" /> Girls: 47.6%</span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 bg-[#008DC9] rounded-full" />
+              {lang === "ar" ? "الأولاد: 52.4%" : "Boys: 52.4%"}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 bg-slate-100 border border-slate-200 rounded-full" />
+              {lang === "ar" ? "البنات: 47.6%" : "Girls: 47.6%"}
+            </span>
           </div>
         </div>
       </div>
@@ -168,7 +176,7 @@ export function AnalyticsDashboard({ lang }: AnalyticsDashboardProps) {
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-[#008DC9]" />
-          Yemen Malnutrition Temporal Trends (Last 6 Months)
+          {lang === "ar" ? "الاتجاهات الزمنية لسوء التغذية في اليمن (آخر 6 أشهر)" : "Yemen Malnutrition Temporal Trends (Last 6 Months)"}
         </h3>
 
         {/* Clean Responsive SVG Line Graph representing Recharts AreaChart */}

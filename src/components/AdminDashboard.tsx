@@ -45,6 +45,9 @@ export function AdminDashboard({ lang, onLogAudit, online }: AdminDashboardProps
   const [historicalMeasurements, setHistoricalMeasurements] = useState<any[]>([]);
   const [growthTrend, setGrowthTrend] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [editAgeMonths, setEditAgeMonths] = useState("");
+  const [isUpdatingAge, setIsUpdatingAge] = useState(false);
+  const [ageUpdateSuccess, setAgeUpdateSuccess] = useState(false);
 
   // RAG Compliance Audit States
   const [auditStatus, setAuditStatus] = useState<"idle" | "running" | "completed">("idle");
@@ -165,7 +168,56 @@ export function AdminDashboard({ lang, onLogAudit, online }: AdminDashboardProps
   const loadPatientDiagnostic = async (patient: any) => {
     setSelectedPatientId(patient.id);
     setSelectedPatient(patient);
+    setEditAgeMonths(patient.ageMonths ? String(patient.ageMonths) : "");
     loadPatientHistory(patient.id);
+  };
+
+  const handleUpdatePatientAge = async () => {
+    if (!selectedPatient || !editAgeMonths) return;
+    setIsUpdatingAge(true);
+    setAgeUpdateSuccess(false);
+    const newAge = Number(editAgeMonths);
+
+    // 1. Update in local state
+    const updatedPatient = { ...selectedPatient, ageMonths: newAge };
+    setSelectedPatient(updatedPatient);
+    setPatients(prev => prev.map(p => p.id === selectedPatient.id ? updatedPatient : p));
+
+    // 2. Update in IndexedDB
+    try {
+      await indexedDbService.savePatient(updatedPatient);
+    } catch (err) {
+      console.error("IndexedDB patient update failed", err);
+    }
+
+    // 3. Update on server if online
+    if (online) {
+      try {
+        const res = await fetch(`/api/patients/${selectedPatient.id}/update-age`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ageMonths: newAge,
+            userId: "ADMINISTRATOR",
+            userEmail: "admin@facility.gov.ye",
+            userRole: "Administrator"
+          })
+        });
+        if (res.ok) {
+          setAgeUpdateSuccess(true);
+          setTimeout(() => setAgeUpdateSuccess(false), 3000);
+          onLogAudit("Update Patient Age", `Updated patient ${selectedPatient.name} age to ${newAge} months`);
+        }
+      } catch (err) {
+        console.error("Server patient update failed", err);
+      }
+    } else {
+      setAgeUpdateSuccess(true);
+      setTimeout(() => setAgeUpdateSuccess(false), 3000);
+      onLogAudit("Update Patient Age (Offline)", `Updated patient ${selectedPatient.name} age to ${newAge} months locally`);
+    }
+    
+    setIsUpdatingAge(false);
   };
 
   const loadPatientHistory = async (patientId: string) => {
@@ -594,11 +646,53 @@ export function AdminDashboard({ lang, onLogAudit, online }: AdminDashboardProps
                   </div>
                 </div>
 
+                {/* Child Age Update Panel */}
+                <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 print:hidden">
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      {lang === "en" ? "Manage Age in Months" : "إدارة عمر الطفل بالأشهر"}
+                    </span>
+                    <p className="text-[10px] text-slate-500 font-semibold leading-normal">
+                      {lang === "en" 
+                        ? "Verify or change the child's age in months for diagnostics."
+                        : "التحقق من عمر الطفل بالأشهر وتغييره لأغراض التشخيص والمطابقة."}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="relative w-28">
+                      <input
+                        type="number"
+                        min="0"
+                        max="60"
+                        value={editAgeMonths}
+                        onChange={(e) => setEditAgeMonths(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#008DC9] pr-10"
+                        placeholder="e.g. 18"
+                      />
+                      <span className="absolute right-2.5 top-1.5 text-[9px] text-slate-400 font-bold">
+                        {lang === "en" ? "mo" : "شهر"}
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleUpdatePatientAge}
+                      disabled={isUpdatingAge || !editAgeMonths}
+                      className="bg-[#008DC9] hover:bg-[#005F8A] text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-all shadow-sm cursor-pointer disabled:opacity-50 flex items-center gap-1 shrink-0"
+                    >
+                      {isUpdatingAge ? (
+                        <span className="animate-spin text-white">⏳</span>
+                      ) : ageUpdateSuccess ? (
+                        <span className="text-emerald-300">✓</span>
+                      ) : null}
+                      <span>{lang === "en" ? "Update Age" : "تحديث العمر"}</span>
+                    </button>
+                  </div>
+                </div>
+
                 {historicalMeasurements.length > 0 ? (
                   <div className="space-y-4">
                     {/* Velocities Grid */}
                     {growthTrend && (
-                      <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-center text-xs">
                         <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                           <span className="text-[9px] text-slate-400 font-bold block uppercase">Weight Velocity</span>
                           <span className={`font-black text-xs block mt-1 ${growthTrend.weightVelocity >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
@@ -967,13 +1061,19 @@ export function AdminDashboard({ lang, onLogAudit, online }: AdminDashboardProps
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
             <Server className="w-5 h-5 text-emerald-600" />
-            Active MLOps Pipeline Control
+            {lang === "ar" ? "التحكم بنشاط مسار عمليات تعلم الآلة (MLOps)" : "Active MLOps Pipeline Control"}
           </h2>
 
           <div className="p-4 rounded-xl border border-emerald-100 bg-emerald-50/40 space-y-3">
             <div className="text-xs text-emerald-800 space-y-1">
-              <span className="font-bold block">Current ONNX Version: v2.4-int8-quantized</span>
-              <p className="font-medium">Optimization Target: Android / Tablet / Raspberry Pi (INT8 Quantized, 85MB size)</p>
+              <span className="font-bold block">
+                {lang === "ar" ? "إصدار ONNX الحالي: v2.4-int8-quantized" : "Current ONNX Version: v2.4-int8-quantized"}
+              </span>
+              <p className="font-medium">
+                {lang === "ar" 
+                  ? "هدف التحسين: أندرويد / الأجهزة اللوحية / Raspberry Pi (كمي INT8، حجم 85 ميجابايت)" 
+                  : "Optimization Target: Android / Tablet / Raspberry Pi (INT8 Quantized, 85MB size)"}
+              </p>
             </div>
 
             {triggeringUpdate ? (
@@ -992,7 +1092,7 @@ export function AdminDashboard({ lang, onLogAudit, online }: AdminDashboardProps
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors flex items-center gap-2 shadow-sm cursor-pointer"
               >
                 <Play className="w-4 h-4 fill-white" />
-                Trigger Model Rebuild & Vector Sync
+                {lang === "ar" ? "بدء إعادة بناء النموذج ومزامنة المتجهات" : "Trigger Model Rebuild & Vector Sync"}
               </button>
             )}
           </div>
@@ -1003,12 +1103,14 @@ export function AdminDashboard({ lang, onLogAudit, online }: AdminDashboardProps
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
           <Database className="w-5 h-5 text-purple-600" />
-          RAG Knowledge Base Verification Queue
+          {lang === "ar" ? "طابور التحقق من قاعدة المعرفة للـ RAG" : "RAG Knowledge Base Verification Queue"}
         </h2>
 
         {pendingApprovals.length === 0 ? (
           <p className="text-xs text-slate-400 font-bold italic p-4 bg-slate-50 rounded-xl border border-slate-100">
-            No pending medical reference entries waiting in approval queue. All vector embeddings are actively integrated.
+            {lang === "ar" 
+              ? "لا توجد مراجع طبية معلقة بانتظار الموافقة في طابور التحقق. جميع تضمينات المتجهات مدمجة ونشطة حالياً." 
+              : "No pending medical reference entries waiting in approval queue. All vector embeddings are actively integrated."}
           </p>
         ) : (
           <div className="space-y-4">
@@ -1060,10 +1162,12 @@ export function AdminDashboard({ lang, onLogAudit, online }: AdminDashboardProps
           <div>
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
               <Database className="w-5 h-5 text-[#008DC9]" />
-              RAG Knowledge Base Compliance Audit & Verification
+              {lang === "ar" ? "تدقيق ومطابقة قاعدة معرفة RAG والتحقق منها" : "RAG Knowledge Base Compliance Audit & Verification"}
             </h2>
             <p className="text-xs text-slate-500 mt-1 font-medium">
-              National Health Ministry clinical reference verification standard (Offline-first & Edge AI adapted).
+              {lang === "ar" 
+                ? "معيار التحقق من المراجع السريرية لوزارة الصحة العامة والسكان (متوافق مع العمل دون اتصال والذكاء الاصطناعي الطرفي Edge AI)." 
+                : "National Health Ministry clinical reference verification standard (Offline-first & Edge AI adapted)."}
             </p>
           </div>
           <button
@@ -1078,12 +1182,12 @@ export function AdminDashboard({ lang, onLogAudit, online }: AdminDashboardProps
             {auditStatus === "running" ? (
               <>
                 <RotateCcw className="w-3.5 h-3.5 animate-spin" />
-                Auditing Index...
+                {lang === "ar" ? "جاري تدقيق الفهرس..." : "Auditing Index..."}
               </>
             ) : (
               <>
                 <ShieldCheck className="w-4 h-4 text-white" />
-                Run Compliance Audit
+                {lang === "ar" ? "تشغيل تدقيق المطابقة" : "Run Compliance Audit"}
               </>
             )}
           </button>
@@ -1108,46 +1212,64 @@ export function AdminDashboard({ lang, onLogAudit, online }: AdminDashboardProps
         {/* Audit Report Results (Visible after running or by default in idle state with current metrics) */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 space-y-1">
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Compliance Rating</span>
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+              {lang === "ar" ? "تقييم المطابقة" : "Compliance Rating"}
+            </span>
             <div className="flex items-baseline gap-1.5">
               <span className="text-2xl font-bold text-emerald-600">100%</span>
-              <span className="text-xs font-semibold text-slate-400">(25/25 Target References)</span>
+              <span className="text-xs font-semibold text-slate-400">
+                {lang === "ar" 
+                  ? `(${scientificReferences.length}/${scientificReferences.length} مراجع مستهدفة)` 
+                  : `(${scientificReferences.length}/${scientificReferences.length} Target References)`}
+              </span>
             </div>
             <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full inline-block">
-              Fully Compliant
+              {lang === "ar" ? "متوافق بالكامل" : "Fully Compliant"}
             </span>
           </div>
 
           <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 space-y-1">
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">FAISS Index & Embeddings</span>
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+              {lang === "ar" ? "فهرس وتضمينات FAISS" : "FAISS Index & Embeddings"}
+            </span>
             <div className="flex items-baseline gap-1">
               <span className="text-sm font-bold text-slate-800">IndexIVFFlat</span>
-              <span className="text-xs font-medium text-slate-500">(5 Clusters)</span>
+              <span className="text-xs font-medium text-slate-500">
+                {lang === "ar" ? "(5 عناقيد)" : "(5 Clusters)"}
+              </span>
             </div>
             <p className="text-[10px] text-slate-500 font-medium">
-              Model: <code className="font-mono bg-slate-100 px-1 py-0.5 rounded text-purple-600 text-[9px]">multi-qa-MiniLM-L6-cos-v1</code>
+              {lang === "ar" ? "النموذج: " : "Model: "}<code className="font-mono bg-slate-100 px-1 py-0.5 rounded text-purple-600 text-[9px]">multi-qa-MiniLM-L6-cos-v1</code>
             </p>
           </div>
 
           <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 space-y-1">
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Device Optimization (PQ)</span>
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+              {lang === "ar" ? "تحسين الأجهزة (PQ)" : "Device Optimization (PQ)"}
+            </span>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-sm font-bold text-slate-800">Product Quantization</span>
-              <span className="text-xs font-bold text-[#008DC9] bg-blue-50 px-1.5 py-0.5 rounded">INT8 active</span>
+              <span className="text-sm font-bold text-slate-800">
+                {lang === "ar" ? "تكميم المنتج (Product Quantization)" : "Product Quantization"}
+              </span>
+              <span className="text-xs font-bold text-[#008DC9] bg-blue-50 px-1.5 py-0.5 rounded">
+                {lang === "ar" ? "INT8 نشط" : "INT8 active"}
+              </span>
             </div>
             <p className="text-[10px] text-slate-500 font-medium">
-              8x RAM compression for offline deployment
+              {lang === "ar" ? "ضغط الذاكرة العشوائية بمعدل 8 أضعاف للتشغيل دون اتصال" : "8x RAM compression for offline deployment"}
             </p>
           </div>
 
           <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 space-y-1">
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Bilingual Engine & Doctor Approval</span>
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+              {lang === "ar" ? "المحرك ثنائي اللغة وموافقة الطبيب" : "Bilingual Engine & Doctor Approval"}
+            </span>
             <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
               <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-              AR / EN retrieval validated
+              {lang === "ar" ? "تم التحقق من استرجاع العربية/الإنجليزية" : "AR / EN retrieval validated"}
             </div>
             <p className="text-[10px] text-slate-500 font-medium">
-              Updates require Doctor + Admin sign-off
+              {lang === "ar" ? "تتطلب التحديثات توقيع الطبيب والمسؤول" : "Updates require Doctor + Admin sign-off"}
             </p>
           </div>
         </div>
@@ -1254,10 +1376,12 @@ export function AdminDashboard({ lang, onLogAudit, online }: AdminDashboardProps
           <div className="space-y-1">
             <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
               <Search className="w-4 h-4 text-[#008DC9]" />
-              Bilingual RAG Similarity & Retrieval Playground (Validated)
+              {lang === "ar" ? "بيئة اختبار ومحاكاة استرجاع وتطابق RAG ثنائي اللغة (تم التحقق منها)" : "Bilingual RAG Similarity & Retrieval Playground (Validated)"}
             </h4>
             <p className="text-[10px] text-slate-500 font-medium">
-              Test queries in Arabic or English to verify real-time search routing, similarity scoring, and diagnostic metadata extraction.
+              {lang === "ar" 
+                ? "اختبر الاستعلام باللغة العربية أو الإنجليزية للتحقق من التوجيه التلقائي في الوقت الفعلي، وحساب درجة التشابه واستخراج البيانات الوصفية التشخيصية." 
+                : "Test queries in Arabic or English to verify real-time search routing, similarity scoring, and diagnostic metadata extraction."}
             </p>
           </div>
 
@@ -1268,7 +1392,7 @@ export function AdminDashboard({ lang, onLogAudit, online }: AdminDashboardProps
                 type="text"
                 value={auditQuery}
                 onChange={(e) => setAuditQuery(e.target.value)}
-                placeholder="Type query: e.g. 'WHO child growth standards' or 'معايير نمو الطفل'..."
+                placeholder={lang === "ar" ? "اكتب استفساراً: مثل 'معايير نمو الطفل' أو 'WHO child growth standards'..." : "Type query: e.g. 'WHO child growth standards' or 'معايير نمو الطفل'..."}
                 className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-[#008DC9] font-medium"
               />
             </div>
@@ -1276,14 +1400,14 @@ export function AdminDashboard({ lang, onLogAudit, online }: AdminDashboardProps
               type="submit"
               className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all cursor-pointer"
             >
-              Test Query
+              {lang === "ar" ? "اختبار الاستعلام" : "Test Query"}
             </button>
           </form>
 
           {auditSearchResults.length > 0 && (
             <div className="space-y-3 pt-1 border-t border-slate-100">
               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
-                Top Retrieval Matches (Calculated Similarity):
+                {lang === "ar" ? "أفضل مخرجات الاسترجاع المتطابقة (نسبة التشابه المحسوبة):" : "Top Retrieval Matches (Calculated Similarity):"}
               </span>
               <div className="space-y-3">
                 {auditSearchResults.map((result, idx) => (

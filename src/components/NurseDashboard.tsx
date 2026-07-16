@@ -44,9 +44,10 @@ interface NurseDashboardProps {
   lang: Language;
   onLogAudit: (action: string, details: string) => void;
   online: boolean;
+  userRole?: string;
 }
 
-export function NurseDashboard({ lang, onLogAudit, online }: NurseDashboardProps) {
+export function NurseDashboard({ lang, onLogAudit, online, userRole }: NurseDashboardProps) {
   const t = translations[lang];
   const [patients, setPatients] = useState<any[]>([]);
   const [selectedPatientId, setSelectedPatientId] = useState("");
@@ -65,6 +66,7 @@ export function NurseDashboard({ lang, onLogAudit, online }: NurseDashboardProps
   // Enhanced Inputs for Clinical Assessment
   const [symptoms, setSymptoms] = useState("");
   const [clinicalNotes, setClinicalNotes] = useState("");
+  const [measAgeMonths, setMeasAgeMonths] = useState("");
 
   // New Patient Inputs
   const [isRegistering, setIsRegistering] = useState(true);
@@ -104,9 +106,14 @@ export function NurseDashboard({ lang, onLogAudit, online }: NurseDashboardProps
     if (selectedPatientId) {
       loadPatientHistory(selectedPatientId);
       clearForm();
+      const activePatient = patients.find(p => p.id === selectedPatientId);
+      if (activePatient) {
+        setMeasAgeMonths(activePatient.ageMonths ? String(activePatient.ageMonths) : "");
+      }
     } else {
       setHistoricalMeasurements([]);
       setGrowthTrend(null);
+      setMeasAgeMonths("");
     }
   }, [selectedPatientId, patients]);
 
@@ -733,6 +740,22 @@ export function NurseDashboard({ lang, onLogAudit, online }: NurseDashboardProps
     const currentClinicalNotes = clinicalNotes;
 
     // --- PERSISTENCE & SYNC OPERATIONS ---
+    let updatedPatient = { ...patient };
+    if (measAgeMonths && Number(measAgeMonths) !== patient.ageMonths) {
+      const updatedAge = Number(measAgeMonths);
+      updatedPatient = { ...patient, ageMonths: updatedAge };
+      
+      // Update local state
+      setPatients(prev => prev.map(p => p.id === patient.id ? updatedPatient : p));
+      
+      // Save updated patient to IndexedDB
+      try {
+        await indexedDbService.savePatient(updatedPatient);
+      } catch (err) {
+        console.error("Failed to update patient age in IndexedDB", err);
+      }
+    }
+
     const payload = {
       patientId: selectedPatientId,
       weightKg: Number(currentWeight),
@@ -746,7 +769,8 @@ export function NurseDashboard({ lang, onLogAudit, online }: NurseDashboardProps
       muacMm: currentMuac ? (Number(currentMuac) <= 35 ? Number(currentMuac) * 10 : Number(currentMuac)) : undefined,
       recordedBy: "Fatima Al-Houthi",
       symptoms: currentSymptoms,
-      clinicalNotes: currentClinicalNotes
+      clinicalNotes: currentClinicalNotes,
+      ageMonths: measAgeMonths ? Number(measAgeMonths) : undefined
     };
 
     if (online && !selectedPatientId.startsWith("TEMP-")) {
@@ -781,7 +805,7 @@ export function NurseDashboard({ lang, onLogAudit, online }: NurseDashboardProps
 
     // Trigger diagnostics and display panel with the updated trend and the current measurement's details
     await performDiagnosisAndShow(
-      patient,
+      updatedPatient,
       currentWeight,
       currentHeight,
       currentMuac,
@@ -797,6 +821,8 @@ export function NurseDashboard({ lang, onLogAudit, online }: NurseDashboardProps
     );
 
     clearForm();
+    // Re-fill age months with the updated age
+    setMeasAgeMonths(String(updatedPatient.ageMonths));
   };
 
   const queueMeasurementOffline = async (payload: any) => {
@@ -1007,7 +1033,7 @@ export function NurseDashboard({ lang, onLogAudit, online }: NurseDashboardProps
                     <div className="space-y-4">
                       {/* Trend Velocity Metrics Grid */}
                       {growthTrend && (
-                        <div className="grid grid-cols-3 gap-2.5 text-center">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-center">
                           <div className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-xs">
                             <span className="text-[9px] text-slate-400 font-bold block uppercase">Weight Velocity</span>
                             <div className="flex items-center justify-center gap-1.5 mt-0.5">
@@ -1416,7 +1442,7 @@ export function NurseDashboard({ lang, onLogAudit, online }: NurseDashboardProps
                 </button>
               </div>
 
-              <div className="md:col-span-2 grid grid-cols-3 gap-3 pt-1">
+              <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 pt-1">
                 <button
                   type="button"
                   onClick={() => setDiarrhea(!diarrhea)}
@@ -1504,7 +1530,28 @@ export function NurseDashboard({ lang, onLogAudit, online }: NurseDashboardProps
           </h2>
 
           <form onSubmit={handleSaveMeasurement} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div>
+                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">
+                  {lang === "en" ? "Child Age (Months) *" : "عمر الطفل بالأشهر *"}
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    max="60"
+                    value={measAgeMonths}
+                    onChange={(e) => setMeasAgeMonths(e.target.value)}
+                    placeholder="e.g. 18"
+                    className="w-full bg-slate-50 border border-slate-200 focus:bg-white rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#008DC9] transition-all"
+                  />
+                  <span className="absolute right-4 top-3 text-sm text-slate-400 font-semibold">
+                    {lang === "en" ? "months" : "شهراً"}
+                  </span>
+                </div>
+              </div>
+
               <div>
                 <label className="text-sm font-semibold text-slate-700 mb-1.5 block">
                   {t.weightInput} *
@@ -1692,7 +1739,9 @@ export function NurseDashboard({ lang, onLogAudit, online }: NurseDashboardProps
           <div className="p-4 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-between">
             <div>
               <span className="text-2xl font-black text-orange-700 block">{localQueue.length}</span>
-              <span className="text-xs text-orange-600 font-semibold">Pending Records Queued</span>
+              <span className="text-xs text-orange-600 font-semibold">
+                {lang === "ar" ? "سجلات معلقة في الانتظار" : "Pending Records Queued"}
+              </span>
             </div>
             <button
               onClick={handleManualSync}
@@ -1704,120 +1753,154 @@ export function NurseDashboard({ lang, onLogAudit, online }: NurseDashboardProps
               disabled={localQueue.length === 0 || !online}
             >
               <RefreshCw className={`w-5 h-5 ${localQueue.length > 0 && online ? "animate-spin-slow" : ""}`} />
-              <span className="text-xs font-bold uppercase">Sync Now</span>
+              <span className="text-xs font-bold uppercase">
+                {lang === "ar" ? "المزامنة الآن" : "Sync Now"}
+              </span>
             </button>
           </div>
 
           <div className="space-y-2">
-            <span className="text-xs font-bold text-slate-400 block uppercase tracking-wide">Queued Elements</span>
+            <span className="text-xs font-bold text-slate-400 block uppercase tracking-wide">
+              {lang === "ar" ? "العناصر المدرجة في الانتظار" : "Queued Elements"}
+            </span>
             {localQueue.length === 0 ? (
-              <span className="text-xs text-slate-400 block font-medium italic">All local measurements are fully integrated with backend PostgreSQL database.</span>
+              <span className="text-xs text-slate-400 block font-medium italic">
+                {lang === "ar" 
+                  ? "تم دمج ومزامنة جميع القياسات المحلية بالكامل مع قاعدة بيانات PostgreSQL المركزية." 
+                  : "All local measurements are fully integrated with backend PostgreSQL database."}
+              </span>
             ) : (
               <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
-                {localQueue.map((item, idx) => (
-                  <div key={idx} className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs flex justify-between items-center">
-                    <div>
-                      <span className="font-bold text-slate-800 block">Patient ID: {item.patientId.substring(0, 10)}</span>
-                      <span className="text-slate-500 font-medium">Weight: {item.weightKg}kg | Height: {item.heightCm}cm</span>
+                {localQueue.map((item, idx) => {
+                  const isPatient = item.type === "patient";
+                  const pId = isPatient ? (item.data?.id || "") : (item.data?.patientId || item.data?.patient_id || "");
+                  const formattedId = pId ? pId.substring(0, 10) : "N/A";
+                  const patientLabel = isPatient 
+                    ? (lang === "ar" ? `طفل جديد: ${item.data?.fullName || item.data?.name || formattedId}` : `New Patient: ${item.data?.fullName || item.data?.name || formattedId}`)
+                    : (lang === "ar" ? `رقم المريض: ${formattedId}` : `Patient ID: ${formattedId}`);
+                  const detailText = isPatient
+                    ? (lang === "ar" ? `العمر: ${item.data?.ageMonths || 0} شهور` : `Age: ${item.data?.ageMonths || 0}m`)
+                    : (lang === "ar" ? `الوزن: ${item.data?.weightKg || 0} كجم | الطول: ${item.data?.heightCm || 0} سم` : `Weight: ${item.data?.weightKg || 0}kg | Height: ${item.data?.heightCm || 0}cm`);
+
+                  return (
+                    <div key={idx} className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs flex justify-between items-center">
+                      <div>
+                        <span className="font-bold text-slate-800 block">{patientLabel}</span>
+                        <span className="text-slate-500 font-medium">{detailText}</span>
+                      </div>
+                      <span className="text-[10px] bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded font-bold uppercase">Cached</span>
                     </div>
-                    <span className="text-[10px] bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded font-bold uppercase">Cached</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
         </div>
 
         {/* Dynamic Self-Learning RAG Database Portal */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-              <BrainCircuit className="w-4 h-4 text-indigo-600 animate-pulse" />
-              {lang === "en" ? "Autonomous Self-Learning Gate" : "بوابة التعلم الذاتي وقاعدة المعرفة"}
-            </h3>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-              {lang === "en" ? "Self-Training" : "تعلم مستمر"}
-            </span>
-          </div>
-
-          <p className="text-xs text-slate-500 leading-relaxed font-medium">
-            {lang === "en" 
-              ? "The model automatically logs and learns from each pediatric diagnostic justification to update its offline RAG corpus. These cases are vectorized to cite and guide decisions when internet connection is fully absent." 
-              : "يتعلم النموذج تلقائياً من كل عملية تشخيص للطفل لدعم وتحديث قاعدة المعرفة المحلية RAG. يتم توجيه وحفظ هذه الحالات محلياً للاستشهاد بها ومطابقة الحالات المشابهة عند انقطاع الاتصال تماماً."}
-          </p>
-
-          <div className="space-y-3">
-            <div className="flex justify-between items-center text-xs font-bold border-b border-slate-100 pb-2">
-              <span className="text-slate-400 uppercase">{lang === "en" ? "Learned Knowledge Base" : "المراجع السريرية المضافة"}</span>
-              <span className="text-indigo-600 font-mono font-black">{getDynamicReferencesOnly().length} {lang === "en" ? "References" : "مراجع"}</span>
+        {userRole !== "Nurse" && userRole !== "Doctor" && (
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                <BrainCircuit className="w-4 h-4 text-indigo-600 animate-pulse" />
+                {lang === "en" ? "Autonomous Self-Learning Gate" : "بوابة التعلم الذاتي وقاعدة المعرفة"}
+              </h3>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                {lang === "en" ? "Self-Training" : "تعلم مستمر"}
+              </span>
             </div>
 
-            {getDynamicReferencesOnly().length === 0 ? (
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-400 italic font-medium">
-                {lang === "en" ? "No autonomous diagnostic cases learned yet. Submit a child measurement to trigger self-learning." : "لم يتم تعلم أي حالات طبية بعد. قم بإدخال قياسات أي طفل لتفعيل التعلم الذاتي التلقائي."}
+            <p className="text-xs text-slate-500 leading-relaxed font-medium">
+              {lang === "en" 
+                ? "The model automatically logs and learns from each pediatric diagnostic justification to update its offline RAG corpus. These cases are vectorized to cite and guide decisions when internet connection is fully absent." 
+                : "يتعلم النموذج تلقائياً من كل عملية تشخيص للطفل لدعم وتحديث قاعدة المعرفة المحلية RAG. يتم توجيه وحفظ هذه الحالات محلياً للاستشهاد بها ومطابقة الحالات المشابهة عند انقطاع الاتصال تماماً."}
+            </p>
+
+            <div className="space-y-3">
+              <div className="flex justify-between items-center text-xs font-bold border-b border-slate-100 pb-2">
+                <span className="text-slate-400 uppercase">{lang === "en" ? "Learned Knowledge Base" : "المراجع السريرية المضافة"}</span>
+                <span className="text-indigo-600 font-mono font-black">{getDynamicReferencesOnly().length} {lang === "en" ? "References" : "مراجع"}</span>
               </div>
-            ) : (
-              <div className="max-h-72 overflow-y-auto space-y-3 pr-1">
-                {[...getDynamicReferencesOnly()].reverse().map((ref) => (
-                  <div key={ref.id} className="p-3.5 rounded-xl border border-indigo-100 bg-indigo-50/20 space-y-2.5 text-xs animate-fadeIn">
-                    <div className="flex justify-between items-start gap-3">
-                      <span className="font-extrabold text-indigo-950 block leading-tight">
-                        {lang === "en" ? ref.title : (ref.titleAr || ref.title)}
-                      </span>
-                      <span className="text-[9px] font-black bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded uppercase shrink-0">
-                        {lang === "en" ? "Vectorized" : "موجّه رقمياً"}
-                      </span>
-                    </div>
 
-                    <p className="text-slate-700 leading-relaxed text-[11px] bg-white p-2 rounded-lg border border-indigo-50 font-medium">
-                      {lang === "en" ? ref.abstract : (ref.abstractAr || ref.abstract)}
-                    </p>
-
-                    <div className="text-[10px] text-slate-600 font-semibold bg-white/50 p-2 rounded border border-slate-100 space-y-1">
-                      <div className="text-[9px] text-indigo-800 uppercase font-bold tracking-wider">{lang === "en" ? "Clinical Case Detail" : "تفاصيل الحالة الطبية"}</div>
-                      <div className="leading-relaxed text-slate-700">{lang === "en" ? ref.clinicalSummary : (ref.clinicalSummaryAr || ref.clinicalSummary)}</div>
-                    </div>
-
-                    {ref.sourceUrl && (
-                      <div className="pt-1 border-t border-indigo-100/50 flex items-center justify-between">
-                        <span className="text-[9px] text-slate-400 font-medium font-mono">{ref.citation}</span>
-                        <a 
-                          href={ref.sourceUrl} 
-                          target="_blank" 
-                          rel="noreferrer" 
-                          className="inline-flex items-center gap-1 text-[#008DC9] hover:text-[#007cb2] transition-colors font-extrabold text-[10px]"
-                        >
-                          <Globe className="w-3 h-3" />
-                          <span>{lang === "en" ? "WHO Protocol ↗" : "البروتوكول العالمي ↗"}</span>
-                        </a>
+              {getDynamicReferencesOnly().length === 0 ? (
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-400 italic font-medium">
+                  {lang === "en" ? "No autonomous diagnostic cases learned yet. Submit a child measurement to trigger self-learning." : "لم يتم تعلم أي حالات طبية بعد. قم بإدخال قياسات أي طفل لتفعيل التعلم الذاتي التلقائي."}
+                </div>
+              ) : (
+                <div className="max-h-72 overflow-y-auto space-y-3 pr-1">
+                  {[...getDynamicReferencesOnly()].reverse().map((ref) => (
+                    <div key={ref.id} className="p-3.5 rounded-xl border border-indigo-100 bg-indigo-50/20 space-y-2.5 text-xs animate-fadeIn">
+                      <div className="flex justify-between items-start gap-3">
+                        <span className="font-extrabold text-indigo-950 block leading-tight">
+                          {lang === "en" ? ref.title : (ref.titleAr || ref.title)}
+                        </span>
+                        <span className="text-[9px] font-black bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded uppercase shrink-0">
+                          {lang === "en" ? "Vectorized" : "موجّه رقمياً"}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+
+                      <p className="text-slate-700 leading-relaxed text-[11px] bg-white p-2 rounded-lg border border-indigo-50 font-medium">
+                        {lang === "en" ? ref.abstract : (ref.abstractAr || ref.abstract)}
+                      </p>
+
+                      <div className="text-[10px] text-slate-600 font-semibold bg-white/50 p-2 rounded border border-slate-100 space-y-1">
+                        <div className="text-[9px] text-indigo-800 uppercase font-bold tracking-wider">{lang === "en" ? "Clinical Case Detail" : "تفاصيل الحالة الطبية"}</div>
+                        <div className="leading-relaxed text-slate-700">{lang === "en" ? ref.clinicalSummary : (ref.clinicalSummaryAr || ref.clinicalSummary)}</div>
+                      </div>
+
+                      {ref.sourceUrl && (
+                        <div className="pt-1 border-t border-indigo-100/50 flex items-center justify-between">
+                          <span className="text-[9px] text-slate-400 font-medium font-mono">{ref.citation}</span>
+                          <a 
+                            href={ref.sourceUrl} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="inline-flex items-center gap-1 text-[#008DC9] hover:text-[#007cb2] transition-colors font-extrabold text-[10px]"
+                          >
+                            <Globe className="w-3 h-3" />
+                            <span>{lang === "en" ? "WHO Protocol ↗" : "البروتوكول العالمي ↗"}</span>
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Sync History Logs */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
             <RefreshCw className="w-4 h-4 text-emerald-600" />
-            Device MLOps Sync History
+            {lang === "ar" ? "سجل مزامنة عمليات تعلم الآلة (MLOps) للجهاز" : "Device MLOps Sync History"}
           </h3>
 
           <div className="max-h-64 overflow-y-auto space-y-3 pr-1">
             {syncLogs.length === 0 ? (
-              <span className="text-xs text-slate-400 block font-medium italic">No synchronization operations recorded yet.</span>
+              <span className="text-xs text-slate-400 block font-medium italic">
+                {lang === "ar" ? "لم يتم تسجيل أي عمليات مزامنة بعد." : "No synchronization operations recorded yet."}
+              </span>
             ) : (
               syncLogs.map((log) => (
                 <div key={log.id} className="p-3 rounded-xl border border-slate-100 bg-slate-50 space-y-1.5 text-xs">
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-slate-800 uppercase">{log.type} Sync Session</span>
-                    <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold uppercase">{log.status}</span>
+                    <span className="font-bold text-slate-800 uppercase">
+                      {lang === "ar" 
+                        ? `جلسة مزامنة ${log.type === "Upload" ? "رفع البيانات" : log.type}` 
+                        : `${log.type} Sync Session`}
+                    </span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold uppercase">
+                      {lang === "ar" 
+                        ? (log.status === "Success" || log.status === "success" ? "ناجح" : log.status) 
+                        : log.status}
+                    </span>
                   </div>
                   <div className="text-slate-500 text-[11px] flex justify-between font-medium">
-                    <span>Records Synced: {log.recordsSynced}</span>
+                    <span>
+                      {lang === "ar" ? `عدد السجلات المزامنة: ${log.recordsSynced}` : `Records Synced: ${log.recordsSynced}`}
+                    </span>
                     <span>{new Date(log.timestamp).toLocaleTimeString()}</span>
                   </div>
                 </div>
@@ -1968,10 +2051,12 @@ export function NurseDashboard({ lang, onLogAudit, online }: NurseDashboardProps
                     </span>
                   </div>
 
-                  <div className="border-t border-slate-200/50 pt-2 flex justify-between items-center text-xs font-bold font-mono">
-                    <span>{lang === "en" ? "Decision Confidence Score:" : "معدل ثقة القرار الطبي:"}</span>
-                    <span className="text-sm font-black">{diagnosisData.prediction.wasting.confidenceScore}%</span>
-                  </div>
+                  {userRole !== "Nurse" && userRole !== "Doctor" && (
+                    <div className="border-t border-slate-200/50 pt-2 flex justify-between items-center text-xs font-bold font-mono">
+                      <span>{lang === "en" ? "Decision Confidence Score:" : "معدل ثقة القرار الطبي:"}</span>
+                      <span className="text-sm font-black">{diagnosisData.prediction.wasting.confidenceScore}%</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Longitudinal Growth Velocity & Forecast inside Drawer */}
@@ -1989,7 +2074,7 @@ export function NurseDashboard({ lang, onLogAudit, online }: NurseDashboardProps
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-center text-xs">
                       <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
                         <span className="text-[9px] text-slate-400 font-bold block uppercase">Weight Velocity</span>
                         <span className={`font-black text-[11px] block mt-1 ${diagnosisData.growthTrend.weightVelocity >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
@@ -2170,19 +2255,21 @@ export function NurseDashboard({ lang, onLogAudit, online }: NurseDashboardProps
                     </p>
 
                     {/* Dynamic Self-Learning Section */}
-                    <div className="flex items-center gap-2.5 p-3 rounded-lg bg-indigo-50/70 border border-indigo-100 text-slate-800">
-                      <BrainCircuit className="w-5 h-5 text-indigo-600 shrink-0 animate-pulse" />
-                      <div>
-                        <span className="text-[10px] font-extrabold text-indigo-950 block uppercase tracking-wider">
-                          {lang === "en" ? "Autonomous Self-Learning Activated" : "التعلم الذاتي التلقائي للنموذج نشط"}
-                        </span>
-                        <span className="text-[9px] text-indigo-700 font-semibold block mt-0.5 leading-normal">
-                          {lang === "en" 
-                            ? `Model auto-learns from every clinical outcome. Local vectorized protocols count: ${getLearnedCasesCount()} cases.` 
-                            : `النموذج يتعلم ذاتياً عند كل تشخيص. عدد البروتوكولات السريرية المدمجة والمحدثة تلقائياً: ${getLearnedCasesCount()} حالة.`}
-                        </span>
+                    {userRole !== "Nurse" && userRole !== "Doctor" && (
+                      <div className="flex items-center gap-2.5 p-3 rounded-lg bg-indigo-50/70 border border-indigo-100 text-slate-800">
+                        <BrainCircuit className="w-5 h-5 text-indigo-600 shrink-0 animate-pulse" />
+                        <div>
+                          <span className="text-[10px] font-extrabold text-indigo-950 block uppercase tracking-wider">
+                            {lang === "en" ? "Autonomous Self-Learning Activated" : "التعلم الذاتي التلقائي للنموذج نشط"}
+                          </span>
+                          <span className="text-[9px] text-indigo-700 font-semibold block mt-0.5 leading-normal">
+                            {lang === "en" 
+                              ? `Model auto-learns from every clinical outcome. Local vectorized protocols count: ${getLearnedCasesCount()} cases.` 
+                              : `النموذج يتعلم ذاتياً عند كل تشخيص. عدد البروتوكولات السريرية المدمجة والمحدثة تلقائياً: ${getLearnedCasesCount()} حالة.`}
+                          </span>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {online ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
@@ -2255,9 +2342,11 @@ export function NurseDashboard({ lang, onLogAudit, online }: NurseDashboardProps
                             <span className="font-extrabold text-slate-900">
                               {lang === "en" ? hit.reference.title : (hit.reference.titleAr || hit.reference.title)}
                             </span>
-                            <span className="bg-[#008DC9]/10 text-[#008DC9] text-[10px] font-black uppercase px-2 py-0.5 rounded shrink-0">
-                              {lang === "en" ? "Confidence:" : "مستوى الثقة:"} {Math.round(hit.score * 100)}%
-                            </span>
+                            {userRole !== "Nurse" && userRole !== "Doctor" && (
+                              <span className="bg-[#008DC9]/10 text-[#008DC9] text-[10px] font-black uppercase px-2 py-0.5 rounded shrink-0">
+                                {lang === "en" ? "Confidence:" : "مستوى الثقة:"} {Math.round(hit.score * 100)}%
+                              </span>
+                            )}
                           </div>
 
                           {/* 1. Sourced abstract/clinical details ("المعلومات أو الأدلة المسترجعة") */}

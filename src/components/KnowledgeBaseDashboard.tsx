@@ -692,7 +692,7 @@ export function KnowledgeBaseDashboard({ lang }: KnowledgeBaseDashboardProps) {
                       className="w-full bg-white border border-purple-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-purple-500 font-medium"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div>
                       <label className="text-purple-900 font-bold mb-1 block">Lead Authors *</label>
                       <input
@@ -764,7 +764,7 @@ export function KnowledgeBaseDashboard({ lang }: KnowledgeBaseDashboardProps) {
                 <p className="text-xs font-bold text-slate-500">Querying semantic indices...</p>
               </div>
             ) : (
-              <div className="space-y-4 max-h-[calc(100vh-270px)] overflow-y-auto pr-2">
+              <div className="space-y-4 max-h-60 sm:max-h-80 lg:max-h-[calc(100vh-270px)] overflow-y-auto pr-2">
                 {renderedList.length === 0 ? (
                   <div className="py-12 text-center text-slate-400 space-y-2">
                     <Info className="w-8 h-8 mx-auto text-slate-300" />
@@ -999,7 +999,7 @@ export function KnowledgeBaseDashboard({ lang }: KnowledgeBaseDashboardProps) {
 
                   {/* Dense Heat Matrix Grid */}
                   <div className="pt-2">
-                    <div className="grid grid-cols-24 gap-0.5 max-h-[140px] overflow-y-auto border border-slate-200 p-2.5 rounded-xl bg-slate-50">
+                    <div className="flex flex-wrap gap-0.5 max-h-[140px] overflow-y-auto border border-slate-200 p-2.5 rounded-xl bg-slate-50 justify-center">
                       {inspectionResult.embedding.map((weight: number, i: number) => {
                         // Calculate color based on weight intensity
                         let bgClass = "bg-slate-200";
@@ -1014,7 +1014,7 @@ export function KnowledgeBaseDashboard({ lang }: KnowledgeBaseDashboardProps) {
                           <div 
                             key={i} 
                             title={`Dim ${i + 1}: Weight ${weight}`}
-                            className={`aspect-square rounded-[1px] hover:scale-125 transition-all ${bgClass}`}
+                            className={`w-2 h-2 sm:w-2.5 sm:h-2.5 aspect-square rounded-[1px] hover:scale-125 transition-all ${bgClass}`}
                           />
                         );
                       })}
