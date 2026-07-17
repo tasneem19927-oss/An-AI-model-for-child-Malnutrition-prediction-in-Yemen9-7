@@ -1314,60 +1314,62 @@ export function AdminDashboard({ lang, onLogAudit, online }: AdminDashboardProps
             </span>
           </div>
 
-          <div className="border border-slate-200 rounded-xl overflow-hidden max-h-72 overflow-y-auto bg-slate-50/20">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-bold text-[10px] uppercase tracking-wider">
-                  <th className="py-2 px-3 text-left w-16">ID</th>
-                  <th className="py-2 px-3 text-left">Reference Scientific Title (EN / AR)</th>
-                  <th className="py-2 px-3 text-left w-36">Authors & Publisher</th>
-                  <th className="py-2 px-3 text-center w-24">FAISS Index</th>
-                  <th className="py-2 px-3 text-center w-24">Bilingual</th>
-                  <th className="py-2 px-3 text-center w-24">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {papersToVerify.map((paper) => {
-                  // Check if this paper is indeed present in our dataset
-                  const matchedRef = scientificReferences.find(r => r.id === paper.id);
-                  const isPresent = !!matchedRef;
-                  const hasAr = isPresent && !!matchedRef.titleAr && !!matchedRef.clinicalSummaryAr;
-                  
-                  return (
-                    <tr key={paper.id} className="hover:bg-slate-50/50 bg-white">
-                      <td className="py-2 px-3 font-bold text-slate-700 whitespace-nowrap">{paper.id}</td>
-                      <td className="py-2 px-3 space-y-0.5">
-                        <span className="font-bold text-slate-800 block text-[11px] leading-tight">{paper.name}</span>
-                        <span className="text-slate-400 block text-[10px] font-medium leading-tight dir-rtl text-right sm:text-left">{paper.nameAr}</span>
-                      </td>
-                      <td className="py-2 px-3">
-                        <span className="text-slate-600 font-semibold block text-[10px]">{paper.doc}</span>
-                        <span className="text-slate-400 font-bold block text-[9px]">{paper.year}</span>
-                      </td>
-                      <td className="py-2 px-3 text-center">
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-50 text-[#008DC9] rounded text-[9px] font-bold">
-                          <Layers className="w-2.5 h-2.5" />
-                          Clustered
-                        </span>
-                      </td>
-                      <td className="py-2 px-3 text-center">
-                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                          hasAr ? "bg-purple-50 text-purple-700" : "bg-slate-100 text-slate-500"
-                        }`}>
-                          {hasAr ? "AR & EN" : "EN Only"}
-                        </span>
-                      </td>
-                      <td className="py-2 px-3 text-center">
-                        <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 font-bold">
-                          <Check className="w-3.5 h-3.5" />
-                          Active
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/20">
+            <div className="w-full overflow-x-auto max-h-72 overflow-y-auto">
+              <table className="w-full text-left text-xs border-collapse min-w-[700px]">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-bold text-[10px] uppercase tracking-wider">
+                    <th className="py-2 px-3 text-left w-16">ID</th>
+                    <th className="py-2 px-3 text-left">Reference Scientific Title (EN / AR)</th>
+                    <th className="py-2 px-3 text-left w-36">Authors & Publisher</th>
+                    <th className="py-2 px-3 text-center w-24">FAISS Index</th>
+                    <th className="py-2 px-3 text-center w-24">Bilingual</th>
+                    <th className="py-2 px-3 text-center w-24">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {papersToVerify.map((paper) => {
+                    // Check if this paper is indeed present in our dataset
+                    const matchedRef = scientificReferences.find(r => r.id === paper.id);
+                    const isPresent = !!matchedRef;
+                    const hasAr = isPresent && !!matchedRef.titleAr && !!matchedRef.clinicalSummaryAr;
+                    
+                    return (
+                      <tr key={paper.id} className="hover:bg-slate-50/50 bg-white">
+                        <td className="py-2 px-3 font-bold text-slate-700 whitespace-nowrap">{paper.id}</td>
+                        <td className="py-2 px-3 space-y-0.5">
+                          <span className="font-bold text-slate-800 block text-[11px] leading-tight">{paper.name}</span>
+                          <span className="text-slate-400 block text-[10px] font-medium leading-tight dir-rtl text-right sm:text-left">{paper.nameAr}</span>
+                        </td>
+                        <td className="py-2 px-3">
+                          <span className="text-slate-600 font-semibold block text-[10px]">{paper.doc}</span>
+                          <span className="text-slate-400 font-bold block text-[9px]">{paper.year}</span>
+                        </td>
+                        <td className="py-2 px-3 text-center">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-50 text-[#008DC9] rounded text-[9px] font-bold">
+                            <Layers className="w-2.5 h-2.5" />
+                            Clustered
+                          </span>
+                        </td>
+                        <td className="py-2 px-3 text-center">
+                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                            hasAr ? "bg-purple-50 text-purple-700" : "bg-slate-100 text-slate-500"
+                          }`}>
+                            {hasAr ? "AR & EN" : "EN Only"}
+                          </span>
+                        </td>
+                        <td className="py-2 px-3 text-center">
+                          <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 font-bold">
+                            <Check className="w-3.5 h-3.5" />
+                            Active
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -1450,7 +1452,7 @@ export function AdminDashboard({ lang, onLogAudit, online }: AdminDashboardProps
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 col-span-1 lg:col-span-2">
         <h2 className="text-sm font-bold mb-4 text-slate-800 uppercase tracking-wide">{translations.en.logsTitle}</h2>
         <div className="overflow-x-auto max-h-60 overflow-y-auto">
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="w-full text-left text-xs border-collapse min-w-[600px]">
             <thead>
               <tr className="border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider">
                 <th className="py-2.5 pr-4 text-left">Timestamp</th>

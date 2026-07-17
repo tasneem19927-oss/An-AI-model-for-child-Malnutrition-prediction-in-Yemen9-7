@@ -489,7 +489,7 @@ export function RecordsSyncDashboard({ lang, onNavigateToNurse }: RecordsSyncDas
 
         {/* Database Records Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-slate-700 border-collapse">
+          <table className="w-full text-slate-700 border-collapse min-w-[850px]">
             <thead>
               <tr className="bg-slate-50 text-slate-400 font-extrabold text-[10px] uppercase tracking-wider border-b border-slate-150 text-center">
                 <th className="py-4.5 px-6 text-slate-500 text-left w-1/12">{isAr ? "تاريخ السجل" : "Record Date"}</th>

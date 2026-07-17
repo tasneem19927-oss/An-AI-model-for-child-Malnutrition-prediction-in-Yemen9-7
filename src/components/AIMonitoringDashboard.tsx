@@ -107,7 +107,7 @@ export function AIMonitoringDashboard({ lang }: AIMonitoringDashboardProps) {
   const t = translations[lang];
 
   // Primary Navigation: Redesigned tabs
-  const [activeTab, setActiveTab] = useState<"performance" | "rag" | "edge" | "thesis">("performance");
+  const [activeTab, setActiveTab] = useState<"performance" | "rag" | "edge">("performance");
 
   // ==========================================
   // STATE & DATA: MODEL PERFORMANCE DASHBOARD
@@ -409,17 +409,7 @@ export function AIMonitoringDashboard({ lang }: AIMonitoringDashboardProps) {
           {lang === "en" ? "Edge AI Optimization" : "تحسين كفاءة الحوسبة الطرفية"}
         </button>
 
-        <button
-          onClick={() => setActiveTab("thesis")}
-          className={`px-4 py-3 font-bold text-xs md:text-sm transition-all flex items-center gap-2 border-b-2 cursor-pointer ${
-            activeTab === "thesis" 
-              ? "border-[#008DC9] text-[#008DC9]" 
-              : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          <BookOpen className="w-4 h-4" />
-          {lang === "en" ? "Academic Thesis & Safety" : "الفصل الأكاديمي والسلامة الطبية"}
-        </button>
+
       </div>
 
       {/* ======================================================================================
@@ -779,7 +769,7 @@ export function AIMonitoringDashboard({ lang }: AIMonitoringDashboardProps) {
                 </h4>
                 
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
+                  <table className="w-full text-left text-xs border-collapse min-w-[650px]">
                     <thead>
                       <tr className="border-b border-slate-100 text-slate-400 font-extrabold uppercase text-[10px]">
                         <th className="py-2.5">{lang === "en" ? "Malnutrition Target Model" : "نموذج الهدف المرضي"}</th>
@@ -1418,131 +1408,7 @@ export function AIMonitoringDashboard({ lang }: AIMonitoringDashboardProps) {
         </div>
       )}
 
-      {/* ======================================================================================
-          TAB 4: ACADEMIC THESIS CHAPTER & SAFETY ASSESSMENT
-          ====================================================================================== */}
-      {activeTab === "thesis" && (
-        <div className="bg-white p-6 md:p-10 rounded-3xl border border-slate-200 shadow-xl max-w-4xl mx-auto space-y-8 animate-fadeIn text-slate-800 leading-relaxed font-semibold text-xs md:text-sm">
-          
-          {/* ACADEMIC JOURNAL SECTIONS */}
-          <div className="space-y-4 pb-6 border-b border-slate-100 text-center">
-            <span className="text-[10px] uppercase font-black tracking-widest text-[#008DC9]">
-              THESIS CHAPTER // SCIENTIFIC PEER REVIEW
-            </span>
-            <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight leading-snug">
-              Bilingual Clinical Decision Support & Deep Machine Learning Models for Childhood Malnutrition Severity Prediction: Redesign Evaluation & Safety Framework
-            </h1>
-            <div className="text-xs text-slate-400 font-bold space-x-2">
-              <span>Primary Reviewer: Tasneem Al-Haddad (MD, PhD)</span>
-              <span>•</span>
-              <span>Yemen Nutrition Research Collective (YNRC)</span>
-            </div>
-          </div>
 
-          {/* SECTION 1: METHODOLOGY */}
-          <div className="space-y-3.5">
-            <h2 className="text-base font-extrabold text-slate-950 uppercase tracking-wider border-l-4 border-[#008DC9] pl-3">
-              1. Mathematical Formulation & Evaluation Metrics
-            </h2>
-            <p>
-              In highly stratified epidemiological surveys, such as the UNICEF Yemen Multiple Indicator Cluster Survey (MICS6), standard diagnostic classification accuracy yields highly biased coefficients due to extreme class distributions. For instance, severe childhood stunting or wasting manifests as a minor fraction of the global population. To counteract this limitation, our evaluation methodology bypasses overall accuracy in favor of multi-dimensional clinical indexes:
-            </p>
-            
-            {/* LATEX EQUATIONS */}
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-150 font-mono text-[11px] md:text-xs text-slate-700 leading-loose space-y-3 my-4">
-              <div className="text-center font-bold">
-                [Equation 1.1: Clinical Sensitivity (Recall)]<br/>
-                {"$$\\text{Recall} = \\text{Sensitivity} = \\frac{\\text{True Positives}}{\\text{True Positives} + \\text{False Negatives}}$$&nbsp;"}
-              </div>
-              <div className="text-center font-bold">
-                [Equation 1.2: Positive Predictive Value (Precision)]<br/>
-                {"$$\\text{Precision} = \\text{PPV} = \\frac{\\text{True Positives}}{\\text{True Positives} + \\text{False Positives}}$$&nbsp;"}
-              </div>
-              <div className="text-center font-bold">
-                [Equation 1.3: Balanced Steering F1-Score]<br/>
-                {"$$\\text{F1-Score} = 2 \\times \\frac{\\text{Precision} \\times \\text{Recall}}{\\text{Precision} + \\text{Recall}}$$&nbsp;"}
-              </div>
-            </div>
-
-            <p>
-              <strong>Sensitivity (Recall)</strong> functions as the critical safety gate. In pediatric screening, missing a malnourished child (False Negative) has terminal clinical consequences, whereas raising a False Positive simply results in a temporary clinic visit and a safe supplementary nutrition packet. Therefore, the decision threshold is calibrated to maximize sensitivity while holding <strong>Precision</strong> above a clinically acceptable baseline to protect healthcare resource efficiency.
-            </p>
-          </div>
-
-          {/* SECTION 2: THESIS-READY ANALYSIS */}
-          <div className="space-y-3.5">
-            <h2 className="text-base font-extrabold text-slate-950 uppercase tracking-wider border-l-4 border-[#008DC9] pl-3">
-              2. MICS6 Dataset Evaluation & Discrimination Curves
-            </h2>
-            <p>
-              The XGBoost models were evaluated on an independent, hold-out test set comprising 15% of the verified Yemen MICS6 childhood surveys. The acute wasting model achieved an **F1-Score of 92.68%** with a **ROC-AUC of 0.9740**, demonstrating superb class separability. Chronic stunting modeling showed a robust F1 of **91.14%** with a ROC-AUC of **0.9682**. The bilingual clinical NER sequence labeler (BioMobileBERT-INT8) achieved a verified token classification **F1-Score of 94.80%**, running at a highly optimized speed of 18ms per narrative on local handheld microcontrollers.
-            </p>
-          </div>
-
-          {/* SECTION 3: MEDICAL SAFETY ASSESSMENT */}
-          <div className="space-y-4">
-            <h2 className="text-base font-extrabold text-slate-950 uppercase tracking-wider border-l-4 border-[#008DC9] pl-3">
-              3. Medical Safety & Hallucination Mitigation
-            </h2>
-            
-            {/* SAFETY MATRIX BLOCK */}
-            <div className="bg-rose-50/50 border border-rose-200 rounded-2xl p-5 space-y-3">
-              <h3 className="text-xs font-bold text-rose-950 uppercase tracking-wider flex items-center gap-1.5">
-                <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
-                Medical Hazard Control Protocol
-              </h3>
-              
-              <div className="space-y-3.5 text-xs text-rose-900 leading-relaxed">
-                <div>
-                  <strong>A. Mitigation of False Negatives (FN):</strong>
-                  <p className="font-medium text-[11px] mt-0.5 text-slate-700">
-                    The screening threshold is dynamically lowered to <strong>t = 0.30</strong> in high-fatality outbreak zones, boosting Sensitivity to 100% to capture every single child with wasting, preventing untreated severe acute malnutrition.
-                  </p>
-                </div>
-
-                <div>
-                  <strong>B. RAG Hallucination Safeguard Gates:</strong>
-                  <p className="font-medium text-[11px] mt-0.5 text-slate-700">
-                    Generative medical models often hallucinate treatment dosages (e.g. recommending high-dose calcium tablets during stabilization, which causes fatal cardiac collapse). Our platform implements **strict retrieval-grounded validation**. Answers containing claims not explicitly verified in the retrieved WHO/UNICEF context are automatically blocked, flag warnings are raised, and the user is redirected to authenticated static guideline PDF chapters.
-                  </p>
-                </div>
-
-                <div>
-                  <strong>C. Absolute Local Traceability:</strong>
-                  <p className="font-medium text-[11px] mt-0.5 text-slate-700">
-                    Every diagnostic recommendation is permanently bound to explicit citations of WHO/UNICEF and Yemeni MoPHP guidelines, complete with chapter, section, and page references, ensuring perfect clinical auditability.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* SECTION 4: RECOMMENDATIONS FOR CLINICAL VALIDATION */}
-          <div className="space-y-3.5 pt-2">
-            <h2 className="text-base font-extrabold text-slate-950 uppercase tracking-wider border-l-4 border-[#008DC9] pl-3">
-              4. Recommendations for Publication & Field Validation
-            </h2>
-            <p>
-              To advance the platform toward clinical adoption and international peer-reviewed publication, we propose the following systematic roadmap:
-            </p>
-            <ol className="list-decimal pl-5 space-y-2 font-medium">
-              <li>
-                <strong>Prospective Observational Field Trial:</strong> Deploy the platform as a parallel, non-interventional decision assist tool alongside local pediatricians in Aden and Sana'a Governorates. Check concordance rates with senior specialist diagnoses.
-              </li>
-              <li>
-                <strong>Bilingual Linguistic Stress-testing:</strong> Expand the clinical NER fine-tuning to include local Yemeni vernacular dialects for medical terms (e.g., describing pitting oedema as 'Warram' or severe wasting as 'Koshshaf').
-              </li>
-              <li>
-                <strong>External Validation:</strong> Validate the XGBoost severities model using external demographic surveys from conflict zones in neighboring Horn of Africa or the Middle East to confirm model generalizability.
-              </li>
-              <li>
-                <strong>Randomized CDS Trial:</strong> Conduct a multi-center randomized trial measuring patient recovery rates and clinic throughput speed in outpatient centers utilizing AI decision assists versus traditional paper-chart clinics.
-              </li>
-            </ol>
-          </div>
-
-        </div>
-      )}
 
     </div>
   );

@@ -371,7 +371,7 @@ export function SyncDashboard({ lang, currentUser }: SyncDashboardProps) {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+            <table className="w-full text-left border-collapse text-xs min-w-[650px]">
               <thead>
                 <tr className="bg-slate-100 text-slate-500 font-bold uppercase text-[9px] border-b border-slate-200">
                   <th className="px-5 py-3">{curT.recordType}</th>
@@ -458,7 +458,7 @@ export function SyncDashboard({ lang, currentUser }: SyncDashboardProps) {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+            <table className="w-full text-left border-collapse text-xs min-w-[550px]">
               <thead>
                 <tr className="bg-slate-100 text-slate-500 font-bold uppercase text-[9px] border-b border-slate-200">
                   <th className="px-5 py-3">Packet ID</th>

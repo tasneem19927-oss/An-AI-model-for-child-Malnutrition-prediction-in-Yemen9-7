@@ -825,27 +825,28 @@ export default function App() {
                       ? "Search scientific journals & clinical guidelines... (e.g. F-75 dosage, SAM, stunting)"
                       : "ابحث في المجلات العلمية والبروتوكولات الطبية... (مثل جرعة F-75، التقزم، SAM)"
                   }
-                  className="w-full bg-white border border-slate-300 hover:border-slate-400 focus:border-[#008DC9] focus:ring-2 focus:ring-[#008DC9]/20 rounded-2xl pl-12 pr-32 py-4 text-sm font-medium transition-all shadow-sm focus:outline-none text-slate-900 placeholder-slate-400"
+                  className="w-full bg-white border border-slate-300 hover:border-slate-400 focus:border-[#008DC9] focus:ring-2 focus:ring-[#008DC9]/20 rounded-2xl pl-12 pr-16 lg:pr-32 py-4 text-sm font-medium transition-all shadow-sm focus:outline-none text-slate-900 placeholder-slate-400"
                 />
                 <Search className="absolute left-4 w-5 h-5 text-slate-400" />
                 <button
                   type="submit"
                   disabled={globalSearchLoading}
-                  className="absolute right-2 bg-gradient-to-r from-[#008DC9] to-[#00A1E4] hover:from-[#007cb2] hover:to-[#008DC9] disabled:from-slate-300 disabled:to-slate-400 text-white font-bold py-2.5 px-6 rounded-xl text-xs transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+                  className="absolute right-2 bg-gradient-to-r from-[#008DC9] to-[#00A1E4] hover:from-[#007cb2] hover:to-[#008DC9] disabled:from-slate-300 disabled:to-slate-400 text-white font-bold py-2.5 px-3 lg:px-6 rounded-xl text-xs transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+                  title={lang === "en" ? "Ask Support" : "اسأل الدعم"}
                 >
                   {globalSearchLoading ? (
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                   ) : (
                     <Sparkles className="w-3.5 h-3.5" />
                   )}
-                  {lang === "en" ? "Ask Support" : "اسأل الدعم"}
+                  <span className="hidden lg:inline">{lang === "en" ? "Ask Support" : "اسأل الدعم"}</span>
                 </button>
               </form>
             </div>
 
-            <div className="flex gap-2.5 items-center bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm shrink-0">
+            <div className="flex gap-2.5 items-center bg-white p-2.5 lg:px-4 lg:py-2.5 rounded-xl border border-slate-200 shadow-sm shrink-0" title={online ? (lang === "en" ? "Smart Web Grounding: ACTIVE" : "البحث المتصل بالشبكة: نشط") : (lang === "en" ? "Offline Mode" : "الوضع دون اتصال")}>
               <span className={`w-2.5 h-2.5 rounded-full ${online ? "bg-emerald-500 animate-pulse" : "bg-rose-500"}`} />
-              <span className="text-xs font-bold text-slate-600">
+              <span className="text-xs font-bold text-slate-600 hidden lg:inline">
                 {online 
                   ? (lang === "en" ? "Smart Web Grounding: ACTIVE" : "البحث المتصل بالشبكة: نشط") 
                   : (lang === "en" ? "Offline Mode: Local Guideline Index" : "الوضع دون اتصال: المكتبة المحلية فقط")

@@ -564,52 +564,54 @@ export const PatientClinicalHistory: React.FC<PatientClinicalHistoryProps> = ({
 
       {/* Visit List table for detailed manual lookup */}
       <div className="border border-slate-200 rounded-xl overflow-hidden text-xs">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-slate-50 text-slate-400 font-extrabold uppercase border-b border-slate-200 text-[9px] tracking-wider">
-              <th className="p-2.5 pl-4">{t.date}</th>
-              <th className="p-2.5">{t.age}</th>
-              <th className="p-2.5">{t.weightVal}</th>
-              <th className="p-2.5">{t.heightVal}</th>
-              <th className="p-2.5">{t.muacVal}</th>
-              <th className="p-2.5 pr-4 text-right">WHZ / WAZ / HAZ</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {visitPoints.map((v, i) => (
-              <tr 
-                key={v.id} 
-                onClick={() => setSelectedVisitIdx(i)}
-                className={`hover:bg-blue-50/40 transition-colors cursor-pointer ${
-                  (selectedVisitIdx === i || (selectedVisitIdx === null && i === visitPoints.length - 1))
-                    ? "bg-blue-50/50 font-semibold" 
-                    : ""
-                }`}
-              >
-                <td className="p-2.5 pl-4 font-medium text-slate-600">
-                  {new Date(v.date).toLocaleDateString(lang === "ar" ? "ar-YE" : "en-US", { month: "short", day: "numeric", year: "numeric" })}
-                </td>
-                <td className="p-2.5 text-slate-600 font-mono font-bold">{v.ageMonths}m</td>
-                <td className="p-2.5 text-slate-900 font-bold">{v.weight.toFixed(2)} kg</td>
-                <td className="p-2.5 text-slate-900 font-bold">{v.height.toFixed(1)} cm</td>
-                <td className="p-2.5 text-slate-600 font-bold">{v.muac > 0 ? `${v.muac} mm` : "N/A"}</td>
-                <td className="p-2.5 pr-4 text-right font-mono font-black">
-                  <span className={v.whz <= -3 ? "text-rose-600" : v.whz <= -2 ? "text-amber-600" : "text-emerald-600"}>
-                    {v.whz.toFixed(1)}
-                  </span>
-                  {" / "}
-                  <span className={v.waz <= -3 ? "text-rose-600" : v.waz <= -2 ? "text-amber-600" : "text-emerald-600"}>
-                    {v.waz.toFixed(1)}
-                  </span>
-                  {" / "}
-                  <span className={v.haz <= -3 ? "text-rose-600" : v.haz <= -2 ? "text-amber-600" : "text-emerald-600"}>
-                    {v.haz.toFixed(1)}
-                  </span>
-                </td>
+        <div className="w-full overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[500px]">
+            <thead>
+              <tr className="bg-slate-50 text-slate-400 font-extrabold uppercase border-b border-slate-200 text-[9px] tracking-wider">
+                <th className="p-2.5 pl-4">{t.date}</th>
+                <th className="p-2.5">{t.age}</th>
+                <th className="p-2.5">{t.weightVal}</th>
+                <th className="p-2.5">{t.heightVal}</th>
+                <th className="p-2.5">{t.muacVal}</th>
+                <th className="p-2.5 pr-4 text-right">WHZ / WAZ / HAZ</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {visitPoints.map((v, i) => (
+                <tr 
+                  key={v.id} 
+                  onClick={() => setSelectedVisitIdx(i)}
+                  className={`hover:bg-blue-50/40 transition-colors cursor-pointer ${
+                    (selectedVisitIdx === i || (selectedVisitIdx === null && i === visitPoints.length - 1))
+                      ? "bg-blue-50/50 font-semibold" 
+                      : ""
+                  }`}
+                >
+                  <td className="p-2.5 pl-4 font-medium text-slate-600">
+                    {new Date(v.date).toLocaleDateString(lang === "ar" ? "ar-YE" : "en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  </td>
+                  <td className="p-2.5 text-slate-600 font-mono font-bold">{v.ageMonths}m</td>
+                  <td className="p-2.5 text-slate-900 font-bold">{v.weight.toFixed(2)} kg</td>
+                  <td className="p-2.5 text-slate-900 font-bold">{v.height.toFixed(1)} cm</td>
+                  <td className="p-2.5 text-slate-600 font-bold">{v.muac > 0 ? `${v.muac} mm` : "N/A"}</td>
+                  <td className="p-2.5 pr-4 text-right font-mono font-black">
+                    <span className={v.whz <= -3 ? "text-rose-600" : v.whz <= -2 ? "text-amber-600" : "text-emerald-600"}>
+                      {v.whz.toFixed(1)}
+                    </span>
+                    {" / "}
+                    <span className={v.waz <= -3 ? "text-rose-600" : v.waz <= -2 ? "text-amber-600" : "text-emerald-600"}>
+                      {v.waz.toFixed(1)}
+                    </span>
+                    {" / "}
+                    <span className={v.haz <= -3 ? "text-rose-600" : v.haz <= -2 ? "text-amber-600" : "text-emerald-600"}>
+                      {v.haz.toFixed(1)}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
