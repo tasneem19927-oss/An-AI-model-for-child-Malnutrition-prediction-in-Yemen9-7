@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { translations, Language } from "../utils/translation";
-import { Activity, ShieldAlert, CheckCircle2, ChevronRight, FileText, FileDown, Search, HeartPulse, Sparkles, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Plus, Users, X, UserPlus, ShieldCheck } from "lucide-react";
+import { ShieldAlert, FileText, FileDown, Search, HeartPulse, Sparkles, TrendingUp, ArrowUpRight, ArrowDownRight, Plus, Users, X, UserPlus, ShieldCheck } from "lucide-react";
 import { predictMalnutrition } from "../utils/prediction";
 import { generateClinicalReasoning } from "../utils/rag";
 import { indexedDbService } from "../utils/indexedDbService";

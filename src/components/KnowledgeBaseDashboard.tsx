@@ -6,13 +6,11 @@ import {
   ExternalLink, 
   RefreshCw, 
   Cpu, 
-  Activity, 
   Check, 
   Globe, 
   ShieldCheck,
   UserCheck,
-  Zap,
-  BookOpen
+  Zap
 } from "lucide-react";
 import { chunkText } from "../utils/kbService";
 import { ivfClusters, calculateSimilarity } from "../utils/rag";
@@ -44,7 +42,7 @@ interface SearchResult {
   clusterName: string;
 }
 
-export function KnowledgeBaseDashboard({ lang }: KnowledgeBaseDashboardProps) {
+export function KnowledgeBaseDashboard({ lang: _lang }: KnowledgeBaseDashboardProps) {
   const [activeTab, setActiveTab] = useState<"library" | "inspector" | "sync">("library");
   
   // Knowledge Base State
@@ -179,6 +177,7 @@ export function KnowledgeBaseDashboard({ lang }: KnowledgeBaseDashboardProps) {
       organization: newOrg || "Independent Clinician Proposal",
       year: newYear,
       abstract: newAbstract,
+      clinicalSummary: newAbstract,
       citation: newCitation || "Direct user clinical submission.",
       sourceUrl: newUrl,
       approvedByAdmin: false,
@@ -256,15 +255,15 @@ export function KnowledgeBaseDashboard({ lang }: KnowledgeBaseDashboardProps) {
       let highestSimilarity = 0.0;
       const lowerChunk = primaryChunk.toLowerCase();
 
-      Object.entries(ivfClusters).forEach(([clusterKey, keywords]) => {
+      ivfClusters.forEach((cluster) => {
         let matches = 0;
-        keywords.forEach((keyword: string) => {
+        cluster.centroidKeywords.forEach((keyword: string) => {
           if (lowerChunk.includes(keyword.toLowerCase())) matches++;
         });
-        const currentSim = matches / keywords.length;
+        const currentSim = matches / cluster.centroidKeywords.length;
         if (currentSim > highestSimilarity) {
           highestSimilarity = currentSim;
-          matchedCluster = clusterKey;
+          matchedCluster = cluster.name;
         }
       });
 

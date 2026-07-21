@@ -26,7 +26,7 @@ export interface SearchResult {
  * the abstract and summaries of the top matching local references.
  */
 export function synthesizeOfflineAnswer(
-  query: string,
+  _query: string,
   hits: { reference: ScientificReference; score: number; clusterName: string }[]
 ): { answer: string; citations: Citation[] } {
   if (hits.length === 0) {
@@ -86,9 +86,6 @@ export async function synthesizeOfflineAnswerWithAI(
         }
       }
     });
-
-    // Detect if the query is in Arabic or has Arabic characters
-    const hasArabic = /[\u0600-\u06FF]/.test(query);
 
     const docContext = hits.map((hit, idx) => {
       const ref = hit.reference;

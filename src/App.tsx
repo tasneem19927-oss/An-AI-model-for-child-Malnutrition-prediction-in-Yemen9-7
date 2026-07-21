@@ -34,7 +34,6 @@ import {
   X,
   BookOpen,
   Award,
-  AlertCircle,
   Menu
 } from "lucide-react";
 

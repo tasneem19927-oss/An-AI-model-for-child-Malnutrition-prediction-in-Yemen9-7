@@ -328,7 +328,7 @@ async function startServer() {
   });
 
   // 1b. USER MANAGEMENT & DEMO ACCOUNTS API
-  app.get("/api/users", (req, res) => {
+  app.get("/api/users", (_req, res) => {
     res.json(db.users);
   });
 
@@ -341,7 +341,7 @@ async function startServer() {
     res.json({ success: true, user: newUser });
   });
 
-  app.post("/api/users/reset/defaults", (req, res) => {
+  app.post("/api/users/reset/defaults", (_req, res) => {
     db.users = [
       {
         id: "USR-001",
@@ -424,7 +424,7 @@ async function startServer() {
   });
 
   // 2. PATIENTS API: Retrieve all patients
-  app.get("/api/patients", (req, res) => {
+  app.get("/api/patients", (_req, res) => {
     res.json(db.patients);
   });
 
@@ -514,7 +514,7 @@ async function startServer() {
     res.json(measurements);
   });
 
-  app.get("/api/measurements", (req, res) => {
+  app.get("/api/measurements", (_req, res) => {
     res.json(db.measurements);
   });
 
@@ -733,20 +733,20 @@ async function startServer() {
   });
 
   // 7. GET SYSTEM LOGS (Admin / Doctor)
-  app.get("/api/logs/audit", (req, res) => {
+  app.get("/api/logs/audit", (_req, res) => {
     res.json(db.auditLogs);
   });
 
   // 8. GET SYNC LOGS & SYNCHRONIZATION CONTROLLERS
-  app.get("/api/sync/devices", (req, res) => {
+  app.get("/api/sync/devices", (_req, res) => {
     res.json(db.devices);
   });
 
-  app.get("/api/sync/history", (req, res) => {
+  app.get("/api/sync/history", (_req, res) => {
     res.json(db.uploadHistory);
   });
 
-  app.get("/api/sync/logs", (req, res) => {
+  app.get("/api/sync/logs", (_req, res) => {
     res.json(db.syncLogs);
   });
 
@@ -1029,7 +1029,7 @@ async function startServer() {
   });
 
   // 9. KNOWLEDGE BASE UPDATE FLOW (Requires Doctor and Admin Approval)
-  app.get("/api/knowledge-base", (req, res) => {
+  app.get("/api/knowledge-base", (_req, res) => {
     res.json(db.knowledgeBase);
   });
 
@@ -1084,7 +1084,7 @@ async function startServer() {
   });
 
   // 10. STATISTICS API FOR THE ANALYTICS DASHBOARD
-  app.get("/api/analytics/prevalence", (req, res) => {
+  app.get("/api/analytics/prevalence", (_req, res) => {
     // Generate beautiful aggregates based on current database records
     const genderRatio = { Male: 0, Female: 0 };
     const stuntingCounts = { Normal: 0, Mild: 0, Moderate: 0, Severe: 0 };
@@ -1141,7 +1141,7 @@ async function startServer() {
   } else {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
-    app.get("*", (req, res) => {
+    app.get("*", (_req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });
   }

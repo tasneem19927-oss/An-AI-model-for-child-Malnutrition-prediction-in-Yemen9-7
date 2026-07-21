@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "motion/react";
 import { translations, Language } from "../utils/translation";
 import { 
   Activity, 
-  Plus, 
   Database, 
   RefreshCw, 
   AlertTriangle, 
@@ -15,19 +14,10 @@ import {
   BrainCircuit,
   BookOpen,
   Tag,
-  ChevronRight,
-  Calendar,
-  User,
   TrendingUp,
-  TrendingDown,
   ArrowUpRight,
   ArrowDownRight,
   Search,
-  MapPin,
-  GraduationCap,
-  DollarSign,
-  Heart,
-  FileText,
   AlertCircle,
   Globe
 } from "lucide-react";

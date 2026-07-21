@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { translations, Language } from "../utils/translation";
 import { 
-  Shield, Users, Server, Database, CheckCircle2, AlertTriangle, Play, HelpCircle, 
-  Edit2, Save, X, RotateCcw, ShieldCheck, Sparkles, Search, Check, Cpu, Layers, FileText, ChevronRight,
-  TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Plus
+  Users, Server, Database, CheckCircle2, Play, 
+  Edit2, Save, X, RotateCcw, ShieldCheck, Sparkles, Search, Check, Cpu, Layers, FileText, 
+  TrendingUp, Plus
 } from "lucide-react";
 import { searchKnowledgeBase } from "../utils/rag";
 import { scientificReferences } from "../data/scientific_knowledge";

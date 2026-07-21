@@ -84,7 +84,7 @@ class IndexedDbService {
     this.dbPromise = new Promise((resolve, reject) => {
       const request = window.indexedDB.open(DB_NAME, DB_VERSION);
 
-      request.onupgradeneeded = (event) => {
+      request.onupgradeneeded = (_event) => {
         const db = request.result;
         
         // Patients store

@@ -1,31 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
-import { translations, Language } from "../utils/translation";
+import { Language } from "../utils/translation";
 import { 
-  Server, 
   ShieldCheck, 
   Zap, 
   Activity, 
-  HelpCircle, 
-  ArrowRight, 
   Layers, 
-  FileCode, 
   RefreshCw, 
   Cpu, 
   Database, 
   Terminal, 
-  TrendingUp, 
-  FileJson,
-  AlertCircle,
-  Copy,
-  Check,
-  X,
-  BookOpen,
-  Award,
-  Download,
-  AlertTriangle,
+  Award, 
+  AlertTriangle, 
   FileText
 } from "lucide-react";
-import { audit_report_mics6 } from "../data/trained_models";
 
 interface AIMonitoringDashboardProps {
   lang: Language;
@@ -104,8 +91,6 @@ const ragTestDataset: RAGTestCase[] = [
 ];
 
 export function AIMonitoringDashboard({ lang }: AIMonitoringDashboardProps) {
-  const t = translations[lang];
-
   // Primary Navigation: Redesigned tabs
   const [activeTab, setActiveTab] = useState<"performance" | "rag" | "edge">("performance");
 

@@ -2,14 +2,8 @@ import React, { useState } from "react";
 import { calculateZScoresAndFeatures } from "../utils/growth";
 import { 
   TrendingUp, 
-  Sparkles, 
   Activity, 
-  Calendar, 
-  ChevronRight, 
-  Scale, 
-  Ruler, 
-  AlertTriangle,
-  FileText
+  Calendar
 } from "lucide-react";
 
 interface PatientClinicalHistoryProps {
@@ -197,7 +191,6 @@ export const PatientClinicalHistory: React.FC<PatientClinicalHistoryProps> = ({
   // Map Direct Anthropometrics
   // Scale weightKg dynamically
   const weights = visitPoints.map(p => p.weight);
-  const heights = visitPoints.map(p => p.height);
   const muacs = visitPoints.map(p => p.muac);
 
   const minWeight = Math.max(1, Math.min(...weights) - 1);

@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { translations, Language } from "../utils/translation";
-import { Map, BarChart2, PieChart, TrendingUp, HelpCircle, Activity } from "lucide-react";
+import { Language } from "../utils/translation";
+import { BarChart2, PieChart, TrendingUp } from "lucide-react";
 
 interface AnalyticsDashboardProps {
   lang: Language;
 }
 
 export function AnalyticsDashboard({ lang }: AnalyticsDashboardProps) {
-  const t = translations[lang];
   const [stats, setStats] = useState<any>(null);
 
   useEffect(() => {

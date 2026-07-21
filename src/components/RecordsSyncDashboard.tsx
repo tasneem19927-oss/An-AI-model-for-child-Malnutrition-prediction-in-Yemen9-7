@@ -5,26 +5,19 @@ import { indexedDbService, OfflineRecord } from "../utils/indexedDbService";
 import { syncManager, SyncStatus } from "../utils/syncManager";
 import { 
   Search, 
-  Filter, 
   RefreshCw, 
   Wifi, 
   WifiOff, 
-  CheckCircle2, 
   AlertCircle, 
   Clock, 
-  User, 
   UserCheck,
   Calendar, 
   Database,
-  ArrowRight,
   ChevronDown,
   ChevronUp,
   Activity,
   PlusCircle,
-  TrendingUp,
-  FileSpreadsheet,
-  Layers,
-  Sparkles
+  Layers
 } from "lucide-react";
 
 interface RecordsSyncDashboardProps {

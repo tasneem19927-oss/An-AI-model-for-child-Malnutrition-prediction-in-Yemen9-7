@@ -142,14 +142,14 @@ export function getDynamicReferencesOnly(): ScientificReference[] {
  */
 export function learnNewDiagnosticCase(
   patient: any,
-  prediction: MalnutritionPrediction,
+  _prediction: MalnutritionPrediction,
   recommendation: ClinicalRecommendation,
   weight: number,
   height: number,
   muac?: number,
   oedema?: boolean,
-  symptoms?: string,
-  clinicalNotes?: string
+  _symptoms?: string,
+  _clinicalNotes?: string
 ): ScientificReference {
   const id = `LEARNED-REF-${Date.now()}`;
   
@@ -436,15 +436,13 @@ export function searchKnowledgeBase(
  */
 export function generateClinicalReasoning(
   prediction: MalnutritionPrediction,
-  childName: string,
-  ageMonths: number,
+  _childName: string,
+  _ageMonths: number,
   muacMm?: number,
   oedema?: boolean,
   entities: { text: string; entityType: string }[] = []
 ): ClinicalRecommendation {
   const isStunting = prediction.stunting.severityClass !== "Normal";
-  const isWasting = prediction.wasting.severityClass !== "Normal";
-  const isUnderweight = prediction.underweight.severityClass !== "Normal";
 
   // Formulate clinical RAG query based on findings & entities
   let clinicalQuery = "Malnutrition screening standards WHO Child Growth Standards";
