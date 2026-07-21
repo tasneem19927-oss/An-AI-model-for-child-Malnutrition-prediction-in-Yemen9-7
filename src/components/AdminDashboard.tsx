@@ -102,9 +102,9 @@ export function AdminDashboard({ lang, onLogAudit, online }: AdminDashboardProps
     const steps = [
       { p: 25, m: "Validating FAISS IndexIVFFlat layout... 5 Centroid clusters detected." },
       { p: 50, m: "Checking PQ compression ratio... (8x reduction active, low-memory compatible)." },
-      { p: 75, m: "Scanning 35 core reference profiles... Validating bilingual search maps..." },
+      { p: 75, m: `Scanning ${scientificReferences.length} core reference profiles... Validating bilingual search maps...` },
       { p: 90, m: "Running retrieval test checks for both English and Arabic queries..." },
-      { p: 100, m: "Verification Complete! 35/35 references fully matched and active." }
+      { p: 100, m: `Verification Complete! ${scientificReferences.length}/${scientificReferences.length} references fully matched and active.` }
     ];
 
     steps.forEach((step, idx) => {
@@ -115,7 +115,7 @@ export function AdminDashboard({ lang, onLogAudit, online }: AdminDashboardProps
           setAuditStatus("completed");
           onLogAudit(
             "RAG Compliance Audit",
-            `Verified 35 scientific references in RAG Knowledge Base. All items embedded, clustered in FAISS clusters, and linked to clinical reasoning engine. Compliance is 100%.`
+            `Verified ${scientificReferences.length} scientific references in RAG Knowledge Base. All items embedded, clustered in FAISS clusters, and linked to clinical reasoning engine. Compliance is 100%.`
           );
           fetchAuditLogs();
         }
