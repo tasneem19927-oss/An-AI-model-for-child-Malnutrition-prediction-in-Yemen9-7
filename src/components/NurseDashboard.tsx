@@ -19,8 +19,11 @@ import {
   ArrowDownRight,
   Search,
   AlertCircle,
-  Globe
+  Globe,
+  Download,
+  FileText
 } from "lucide-react";
+import { jsPDF } from "jspdf";
 import { indexedDbService } from "../utils/indexedDbService";
 import { syncManager } from "../utils/syncManager";
 import { predictMalnutrition } from "../utils/prediction";
@@ -84,6 +87,402 @@ export function NurseDashboard({ lang, onLogAudit, online, userRole }: NurseDash
   const [historicalMeasurements, setHistoricalMeasurements] = useState<any[]>([]);
   const [growthTrend, setGrowthTrend] = useState<any | null>(null);
   const [matchingSuggestions, setMatchingSuggestions] = useState<any[]>([]);
+
+  const handleExportPDF = () => {
+    if (!diagnosisData) return;
+
+    try {
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+      });
+
+      const p = diagnosisData.patient || {};
+      const z = diagnosisData.zscores || { waz: 0, haz: 0, whz: 0 };
+      const rec = diagnosisData.recommendation || {};
+      const pred = diagnosisData.prediction || {};
+      const trend = diagnosisData.growthTrend;
+
+      // 1. Colors and Theme
+      const primaryColor = [0, 141, 201]; // WHO Cyan (#008DC9)
+      const darkSlate = [30, 41, 59];    // slate-800
+      const lightSlate = [248, 250, 252]; // slate-50
+      const borderSlate = [226, 232, 240]; // slate-200
+      const accentRose = [225, 29, 72];    // rose-600 (Severe)
+      const accentAmber = [217, 119, 6];   // amber-600 (Moderate)
+      const accentEmerald = [5, 150, 105];  // emerald-600 (Normal/Mild)
+
+      const getSeverityColor = (sev: string) => {
+        if (sev === "Severe") return accentRose;
+        if (sev === "Moderate") return accentAmber;
+        return accentEmerald;
+      };
+
+      const activeAccent = getSeverityColor(rec.severity || "Normal");
+
+      let currentY = 15;
+
+      // 2. Draw Header Area
+      doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.rect(0, 0, 210, 35, "F");
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text("WHO CLINICAL ASSESSMENT REPORT", 15, 15);
+
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text("YEMEN HEALTH MINISTRY - PEDIATRIC NUTRITION PROTOCOL", 15, 21);
+      doc.text("BILINGUAL INTELLIGENT DECISION SUPPORT PLATFORM", 15, 26);
+
+      // Date and metadata block
+      doc.setFont("Helvetica", "bold");
+      doc.text(`REPORT ID: ${String(p.id || "N/A").toUpperCase()}`, 195, 15, { align: "right" });
+      doc.setFont("Helvetica", "normal");
+      doc.text(`DATE: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`, 195, 21, { align: "right" });
+      doc.text("STATUS: VERIFIED CLINICAL PROFILE", 195, 26, { align: "right" });
+
+      currentY = 42;
+
+      // Helper Draw functions
+      const drawSectionHeader = (title: string) => {
+        doc.setFillColor(borderSlate[0], borderSlate[1], borderSlate[2]);
+        doc.rect(15, currentY, 180, 7, "F");
+        
+        doc.setTextColor(darkSlate[0], darkSlate[1], darkSlate[2]);
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(10);
+        doc.text(title, 18, currentY + 5);
+        currentY += 11;
+      };
+
+      const drawFooter = (pageNum: number) => {
+        doc.setDrawColor(borderSlate[0], borderSlate[1], borderSlate[2]);
+        doc.line(15, 280, 195, 280);
+        doc.setTextColor(148, 163, 184);
+        doc.setFont("Helvetica", "italic");
+        doc.setFontSize(8);
+        doc.text("This authorized medical assessment is generated using WHO Child Growth Standards and predictive model classifiers.", 15, 285);
+        doc.text(`Page ${pageNum}`, 195, 285, { align: "right" });
+      };
+
+      // --- SECTION 1: Patient Demographics ---
+      drawSectionHeader("1. CHILD DEMOGRAPHIC RECORD");
+
+      doc.setFillColor(lightSlate[0], lightSlate[1], lightSlate[2]);
+      doc.setDrawColor(borderSlate[0], borderSlate[1], borderSlate[2]);
+      doc.roundedRect(15, currentY, 180, 24, 3, 3, "FD");
+
+      doc.setTextColor(100, 116, 139);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text("CHILD'S FULL NAME:", 20, currentY + 6);
+      doc.text("PARENT/GUARDIAN NAME:", 20, currentY + 12);
+      doc.text("AGE (MONTHS):", 20, currentY + 18);
+
+      doc.text("GENDER / SEX:", 110, currentY + 6);
+      doc.text("RESIDENCE TYPE:", 110, currentY + 12);
+      doc.text("CONTACT NUMBER:", 110, currentY + 18);
+
+      doc.setTextColor(darkSlate[0], darkSlate[1], darkSlate[2]);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(9);
+      doc.text(p.name || "N/A", 60, currentY + 6);
+      doc.text(p.parentName || "N/A", 65, currentY + 12);
+      doc.text(`${p.ageMonths || "N/A"} months`, 50, currentY + 18);
+
+      doc.text(p.sex || "N/A", 145, currentY + 6);
+      doc.text(p.residenceType || "N/A", 145, currentY + 12);
+      doc.text(p.contactNumber || "N/A", 145, currentY + 18);
+
+      currentY += 30;
+
+      // --- SECTION 2: Anthropometrics & WHO Z-Scores ---
+      drawSectionHeader("2. ANTHROPOMETRIC MEASUREMENTS & Z-SCORE DEVIATIONS");
+
+      doc.setFillColor(lightSlate[0], lightSlate[1], lightSlate[2]);
+      doc.roundedRect(15, currentY, 180, 28, 3, 3, "FD");
+
+      doc.setTextColor(100, 116, 139);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text("WEIGHT (KG)", 25, currentY + 6);
+      doc.text("HEIGHT (CM)", 70, currentY + 6);
+      doc.text("MUAC (MM)", 115, currentY + 6);
+      doc.text("BILATERAL OEDEMA", 155, currentY + 6);
+
+      doc.setTextColor(darkSlate[0], darkSlate[1], darkSlate[2]);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text(`${diagnosisData.weight} kg`, 25, currentY + 13);
+      doc.text(`${diagnosisData.height} cm`, 70, currentY + 13);
+      doc.text(diagnosisData.muac ? `${diagnosisData.muac} mm` : "N/A", 115, currentY + 13);
+      doc.text(diagnosisData.oedema ? "YES (Extreme)" : "NO", 155, currentY + 13);
+
+      doc.setDrawColor(borderSlate[0], borderSlate[1], borderSlate[2]);
+      doc.line(15, currentY + 17, 195, currentY + 17);
+
+      doc.setFontSize(8);
+      doc.setTextColor(100, 116, 139);
+      doc.text("WEIGHT-FOR-AGE (WAZ):", 20, currentY + 23);
+      doc.text("HEIGHT-FOR-AGE (HAZ):", 80, currentY + 23);
+      doc.text("WEIGHT-FOR-HEIGHT (WHZ):", 140, currentY + 23);
+
+      const getZSign = (v: number) => {
+        const sign = v >= 0 ? "+" : "";
+        return `${sign}${v.toFixed(2)}`;
+      };
+
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(9);
+      
+      const wazVal = z.waz;
+      const hazVal = z.haz;
+      const whzVal = z.whz;
+
+      doc.setTextColor(wazVal <= -2 ? accentRose[0] : darkSlate[0], wazVal <= -2 ? accentRose[1] : darkSlate[1], wazVal <= -2 ? accentRose[2] : darkSlate[2]);
+      doc.text(getZSign(wazVal), 60, currentY + 23);
+
+      doc.setTextColor(hazVal <= -2 ? accentRose[0] : darkSlate[0], hazVal <= -2 ? accentRose[1] : darkSlate[1], hazVal <= -2 ? accentRose[2] : darkSlate[2]);
+      doc.text(getZSign(hazVal), 120, currentY + 23);
+
+      doc.setTextColor(whzVal <= -2 ? accentRose[0] : darkSlate[0], whzVal <= -2 ? accentRose[1] : darkSlate[1], whzVal <= -2 ? accentRose[2] : darkSlate[2]);
+      doc.text(getZSign(whzVal), 183, currentY + 23);
+
+      currentY += 34;
+
+      // --- SECTION 3: Diagnostic Classification ---
+      drawSectionHeader("3. CLINICAL DIAGNOSIS & XGBOOST SHIELD ASSESSMENT");
+
+      // Banner for Severity
+      doc.setFillColor(activeAccent[0], activeAccent[1], activeAccent[2]);
+      doc.rect(15, currentY, 180, 10, "F");
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text(`SEVERITY LEVEL: ${(rec.severity || "NORMAL").toUpperCase()}`, 20, currentY + 6.5);
+
+      doc.setFillColor(lightSlate[0], lightSlate[1], lightSlate[2]);
+      doc.setDrawColor(activeAccent[0], activeAccent[1], activeAccent[2]);
+      doc.rect(15, currentY + 10, 180, 22, "D");
+
+      doc.setTextColor(darkSlate[0], darkSlate[1], darkSlate[2]);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text(rec.diagnosis || "Normal child growth indicators.", 20, currentY + 16);
+
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(100, 116, 139);
+      doc.text(`WHO REFERENCE STANDARD: ${rec.whoReference || "WHO Pediatric Growth Protocols"}`, 20, currentY + 22);
+      doc.text(`XGBoost Risk Classifiers: Wasting Risk (${pred.wasting?.riskPercentage || 0}%), Stunting Risk (${pred.stunting?.riskPercentage || 0}%), Underweight (${pred.underweight?.riskPercentage || 0}%)`, 20, currentY + 27);
+
+      currentY += 38;
+
+      // --- SECTION 4: Recommended Interventions ---
+      drawSectionHeader("4. RECOMMENDED CLINICAL INTERVENTIONS & PROTOCOL");
+
+      doc.setFillColor(lightSlate[0], lightSlate[1], lightSlate[2]);
+      doc.setDrawColor(borderSlate[0], borderSlate[1], borderSlate[2]);
+      doc.roundedRect(15, currentY, 180, 42, 3, 3, "FD");
+
+      doc.setTextColor(100, 116, 139);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text("IMMEDIATE ACTION PROTOCOLS REQUIRED:", 20, currentY + 6);
+
+      doc.setTextColor(darkSlate[0], darkSlate[1], darkSlate[2]);
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(9);
+      const wrappedIntervention = doc.splitTextToSize(rec.recommendedIntervention || "None needed, follow up as standard protocol.", 170);
+      doc.text(wrappedIntervention, 20, currentY + 11);
+
+      // Line
+      doc.setDrawColor(borderSlate[0], borderSlate[1], borderSlate[2]);
+      doc.line(15, currentY + 27, 195, currentY + 27);
+
+      doc.setTextColor(100, 116, 139);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text("REFERRAL OR SPECIALIZED ENROLLMENT:", 20, currentY + 32);
+
+      doc.setTextColor(accentRose[0], accentRose[1], accentRose[2]);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(9);
+      doc.text(rec.referralNeed || "No emergency referral needed.", 20, currentY + 37);
+
+      currentY += 48;
+
+      // --- SECTION 5: Longitudinal Trend (If exists) ---
+      if (trend) {
+        drawSectionHeader("5. HISTORICAL VELOCITY & DETERIORATION RISK INDEX");
+
+        doc.setFillColor(lightSlate[0], lightSlate[1], lightSlate[2]);
+        doc.setDrawColor(borderSlate[0], borderSlate[1], borderSlate[2]);
+        doc.roundedRect(15, currentY, 180, 32, 3, 3, "FD");
+
+        doc.setTextColor(100, 116, 139);
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(8);
+        doc.text("WEIGHT VELOCITY:", 20, currentY + 6);
+        doc.text("HEIGHT VELOCITY:", 80, currentY + 6);
+        doc.text("RISK INDEX SCORE:", 140, currentY + 6);
+
+        doc.setTextColor(darkSlate[0], darkSlate[1], darkSlate[2]);
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(9);
+        doc.text(`${trend.weightVelocity >= 0 ? "+" : ""}${trend.weightVelocity.toFixed(2)} kg/month`, 20, currentY + 11);
+        doc.text(`${trend.heightVelocity >= 0 ? "+" : ""}${trend.heightVelocity.toFixed(1)} cm/month`, 80, currentY + 11);
+        doc.text(`${trend.riskScore}% (${trend.trendRiskEn || "Normal"})`, 140, currentY + 11);
+
+        doc.setDrawColor(borderSlate[0], borderSlate[1], borderSlate[2]);
+        doc.line(15, currentY + 15, 195, currentY + 15);
+
+        doc.setTextColor(100, 116, 139);
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(8);
+        doc.text("CLINICAL TREND INTERPRETATION:", 20, currentY + 20);
+
+        doc.setTextColor(darkSlate[0], darkSlate[1], darkSlate[2]);
+        doc.setFont("Helvetica", "normal");
+        doc.setFontSize(8.5);
+        const wrappedTrendDesc = doc.splitTextToSize(trend.trendDescriptionEn || "Trajectory stable. Continue growth monitoring.", 170);
+        doc.text(wrappedTrendDesc, 20, currentY + 24);
+      }
+
+      // Finish Page 1
+      drawFooter(1);
+
+      // --- PAGE 2: CLINICAL EVIDENCE (IF AVAILABLE) ---
+      if (diagnosisData.evidence && diagnosisData.evidence.length > 0) {
+        doc.addPage();
+        currentY = 15;
+
+        // Header Page 2
+        doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.rect(0, 0, 210, 22, "F");
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("CLINICAL PROTOCOLS & OFFLINE RAG RETRIEVAL GUIDELINES", 15, 11);
+        doc.setFont("Helvetica", "normal");
+        doc.setFontSize(8);
+        doc.text("DECISION VERIFICATION VIA KNOWLEDGE CORPUS MATCHING", 15, 16);
+
+        currentY = 28;
+
+        drawSectionHeader("6. WHO EVIDENCE RETRIEVAL EVIDENCE SOURCES (RAG)");
+
+        diagnosisData.evidence.forEach((hit: any, idx: number) => {
+          if (currentY > 230) {
+            drawFooter(2);
+            doc.addPage();
+            currentY = 25;
+          }
+
+          doc.setFillColor(lightSlate[0], lightSlate[1], lightSlate[2]);
+          doc.setDrawColor(borderSlate[0], borderSlate[1], borderSlate[2]);
+          doc.roundedRect(15, currentY, 180, 36, 2, 2, "FD");
+
+          doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+          doc.setFont("Helvetica", "bold");
+          doc.setFontSize(9);
+          doc.text(`REFERENCE ${idx + 1}: ${hit.title || "Matched medical literature"}`, 20, currentY + 6);
+
+          doc.setTextColor(100, 116, 139);
+          doc.setFont("Helvetica", "bold");
+          doc.setFontSize(7.5);
+          doc.text(`CITATION & DIRECTIVE: ${hit.citation || "WHO Nutrition guidelines"}`, 20, currentY + 11);
+
+          doc.setTextColor(darkSlate[0], darkSlate[1], darkSlate[2]);
+          doc.setFont("Helvetica", "normal");
+          doc.setFontSize(8);
+          const wrappedAbstract = doc.splitTextToSize(hit.abstract || "Guidelines detail clinical nutrition protocols for SAM/MAM children.", 170);
+          doc.text(wrappedAbstract, 20, currentY + 16);
+
+          const just = diagnosisData.evidenceJustifications && diagnosisData.evidenceJustifications[idx];
+          if (just) {
+            doc.setTextColor(accentEmerald[0], accentEmerald[1], accentEmerald[2]);
+            doc.setFont("Helvetica", "bold");
+            doc.text("EVIDENCE JUSTIFICATION MATCH FOR CASE:", 20, currentY + 28);
+            
+            doc.setTextColor(darkSlate[0], darkSlate[1], darkSlate[2]);
+            doc.setFont("Helvetica", "italic");
+            const wrappedJust = doc.splitTextToSize(just, 170);
+            doc.text(wrappedJust, 20, currentY + 32);
+          }
+
+          currentY += 42;
+        });
+
+        // Certification blocks on Page 2
+        if (currentY > 220) {
+          drawFooter(2);
+          doc.addPage();
+          currentY = 25;
+        }
+
+        currentY += 10;
+        doc.setDrawColor(borderSlate[0], borderSlate[1], borderSlate[2]);
+        doc.line(15, currentY, 195, currentY);
+
+        currentY += 12;
+        doc.setTextColor(darkSlate[0], darkSlate[1], darkSlate[2]);
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(10);
+        doc.text("CLINICIAN CERTIFICATION & VERIFICATION", 15, currentY);
+
+        currentY += 16;
+        doc.setDrawColor(148, 163, 184);
+        doc.line(15, currentY, 80, currentY);
+        doc.line(115, currentY, 180, currentY);
+
+        doc.setTextColor(100, 116, 139);
+        doc.setFont("Helvetica", "normal");
+        doc.setFontSize(8);
+        doc.text("Signature of Registered Nurse / Clinician", 15, currentY + 4);
+        doc.text("Facility Official Stamp & Authenticator Seal", 115, currentY + 4);
+
+        drawFooter(2);
+      } else {
+        // Sign-off blocks on Page 1 (if no page 2)
+        currentY += 5;
+        doc.setDrawColor(borderSlate[0], borderSlate[1], borderSlate[2]);
+        doc.line(15, currentY, 195, currentY);
+
+        currentY += 8;
+        doc.setTextColor(darkSlate[0], darkSlate[1], darkSlate[2]);
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(10);
+        doc.text("CLINICIAN CERTIFICATION & SIGN-OFF", 15, currentY);
+
+        currentY += 16;
+        doc.setDrawColor(148, 163, 184);
+        doc.line(15, currentY, 80, currentY);
+        doc.line(115, currentY, 180, currentY);
+
+        doc.setTextColor(100, 116, 139);
+        doc.setFont("Helvetica", "normal");
+        doc.setFontSize(8);
+        doc.text("Signature of Attending Clinician", 15, currentY + 4);
+        doc.text("Facility Official Seal", 115, currentY + 4);
+
+        drawFooter(1);
+      }
+
+      // 4. Save and Log
+      doc.save(`WHO-Growth-Assessment-Report-${p.name ? p.name.replace(/\s+/g, "_") : "Child"}.pdf`);
+      triggerAlert("success", `WHO Clinical Report exported successfully for ${p.name}!`);
+      onLogAudit("Export PDF Report", `Downloaded WHO Growth Standards PDF Report for Patient ID: ${p.id || "N/A"}`);
+    } catch (err: any) {
+      console.error("PDF generation error: ", err);
+      triggerAlert("error", `Failed to export PDF: ${err.message || "Error during generation"}`);
+    }
+  };
 
   useEffect(() => {
     fetchPatients();
@@ -1946,6 +2345,31 @@ export function NurseDashboard({ lang, onLogAudit, online, userRole }: NurseDash
 
               {/* Main Contents */}
               <div className="p-6 space-y-6 flex-1 overflow-y-auto">
+                
+                {/* Print/Export Action Bar */}
+                <div className="bg-[#008DC9]/5 border border-[#008DC9]/10 rounded-2xl p-4 flex items-center justify-between gap-4 text-xs">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 bg-[#008DC9]/10 rounded-xl text-[#008DC9]">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="font-extrabold text-slate-800 text-sm block">
+                        {lang === "en" ? "Print WHO Clinical Report" : "طباعة تقرير منظمة الصحة العالمية"}
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-medium block mt-0.5">
+                        {lang === "en" ? "Official clinical standard layout for local distribution" : "تنسيق سريري رسمي للتوزيع المحلي والتوثيق"}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleExportPDF()}
+                    className="bg-[#008DC9] hover:bg-[#007cb2] text-white font-extrabold px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-sm hover:shadow-md cursor-pointer shrink-0 text-xs"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>{lang === "en" ? "Export PDF" : "تصدير التقرير"}</span>
+                  </button>
+                </div>
                 
                 {/* Child Demographic Summary Card */}
                 <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
