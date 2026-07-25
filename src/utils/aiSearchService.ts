@@ -73,7 +73,7 @@ export async function synthesizeOfflineAnswerWithAI(
   hits: { reference: ScientificReference; score: number; clusterName: string }[],
   apiKey: string
 ): Promise<{ answer: string; citations: Citation[] }> {
-  if (!apiKey || apiKey === "AI_STUDIO_INJECTED_OR_YOUR_SECURE_API_KEY") {
+  if (!apiKey || apiKey === "INJECTED_OR_YOUR_SECURE_API_KEY") {
     return synthesizeOfflineAnswer(query, hits);
   }
 
@@ -82,7 +82,6 @@ export async function synthesizeOfflineAnswerWithAI(
       apiKey,
       httpOptions: {
         headers: {
-          'User-Agent': 'aistudio-build',
         }
       }
     });
@@ -116,7 +115,7 @@ Do not start with "Disclaimer" or "[Offline Mode]". The system will append that 
 Just provide the clean, direct answer.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "configurable",
       contents: prompt,
       config: {
         systemInstruction,

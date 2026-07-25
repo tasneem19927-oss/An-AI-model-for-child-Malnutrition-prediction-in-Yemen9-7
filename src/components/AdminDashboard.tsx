@@ -349,9 +349,9 @@ export function AdminDashboard({ lang, onLogAudit, online }: AdminDashboardProps
         setUsers(JSON.parse(cached));
       } else {
         const defaults = [
-          { id: "USR-001", name: "Dr. Samer Al-Sanaani", email: "dr.samer@gmail.com", role: "Doctor", active: true, facility: "Sana'a Pediatric Clinic" },
-          { id: "USR-002", name: "Tasnim Al-Ohami", email: "tasneem1992.7@gmail.com", role: "Administrator", active: true, facility: "National Health Ministry Coordination Center" },
-          { id: "USR-003", name: "Nurse Reem Al-Asiri", email: "nurse.reem@gmail.com", role: "Nurse", active: true, facility: "Hajja Rural Mobile Health Unit" }
+          { id: "USR-001", name: "Dr. Samer", email: "dr.....@gmail.com", role: "Doctor", active: true, facility: "Sana'a Pediatric Clinic" },
+          { id: "USR-002", name: "Tasnim Al-Ohami", email: "tasneem@gmail.com", role: "Administrator", active: true, facility: "National Health Ministry Coordination Center" },
+          { id: "USR-003", name: "Nurse Reem", email: "nurse.....@gmail.com", role: "Nurse", active: true, facility: "Hajja Rural Mobile Health Unit" }
         ];
         setUsers(defaults);
         localStorage.setItem("offline_users", JSON.stringify(defaults));
@@ -468,9 +468,9 @@ export function AdminDashboard({ lang, onLogAudit, online }: AdminDashboardProps
       }
     } catch (e) {
       const defaults = [
-        { id: "USR-001", name: "Dr. Samer Al-Sanaani", email: "dr.samer@gmail.com", role: "Doctor", active: true, facility: "Sana'a Pediatric Clinic" },
-        { id: "USR-002", name: "Tasnim Al-Ohami", email: "tasneem1992.7@gmail.com", role: "Administrator", active: true, facility: "National Health Ministry Coordination Center" },
-        { id: "USR-003", name: "Nurse Reem Al-Asiri", email: "nurse.reem@gmail.com", role: "Nurse", active: true, facility: "Hajja Rural Mobile Health Unit" }
+        { id: "USR-001", name: "Dr. Samer Al-Sanaani", email: "dr.....@gmail.com", role: "Doctor", active: true, facility: "Sana'a Pediatric Clinic" },
+        { id: "USR-002", name: "Tasnim Al-Ohami", email: "tasneem@gmail.com", role: "Administrator", active: true, facility: "National Health Ministry Coordination Center" },
+        { id: "USR-003", name: "Nurse Reem Al-Asiri", email: "nurse......@gmail.com", role: "Nurse", active: true, facility: "Hajja Rural Mobile Health Unit" }
       ];
       setUsers(defaults);
       localStorage.setItem("offline_users", JSON.stringify(defaults));
@@ -861,7 +861,7 @@ export function AdminDashboard({ lang, onLogAudit, online }: AdminDashboardProps
                     value={newUserEmail}
                     onChange={(e) => setNewUserEmail(e.target.value)}
                     className="w-full bg-white border border-slate-200 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-[#008DC9] font-bold text-slate-800"
-                    placeholder="email@gmail.com"
+                    placeholder="e.g. tasneem@gmail.com"
                   />
                 </div>
 
@@ -980,7 +980,7 @@ export function AdminDashboard({ lang, onLogAudit, online }: AdminDashboardProps
                             value={editEmail}
                             onChange={(e) => setEditEmail(e.target.value)}
                             className="w-full bg-white border border-slate-200 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-[#008DC9] font-bold text-slate-800"
-                            placeholder="email@gmail.com"
+                            placeholder="e.g. tasneem@gmail.com"
                           />
                         </div>
                       </div>

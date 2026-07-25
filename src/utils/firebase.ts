@@ -25,10 +25,10 @@ setLogLevel("error");
 // Initialize Firestore with custom settings to handle proxy environment limits.
 // We force HTTP long polling to completely eliminate the gRPC/WebSocket stream timeout errors 
 // ("CANCELLED: Disconnecting idle stream. Timed out waiting for new targets") 
-// that frequently happen in the sandboxed iframe and reverse-proxy environment of AI Studio.
+
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
-}, "ai-studio-anaimodelforchil-f69a6a34-a3fb-4b32-88c5-205f33fa827e");
+}, "An_AI_model_for_child_Malnutrition_prediction_in_Yemen");
 
 export default app;
 

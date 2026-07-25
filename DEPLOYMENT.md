@@ -46,7 +46,7 @@ PORT=3000
 NODE_ENV=development
 
 # LLM & RAG Orchestration Secrets
-GEMINI_API_KEY=AIzaSyYourGeminiApiKeyHere
+API_KEY=AIzaSyYourGeminiApiKeyHere
 
 # Firebase Project Configuration Details
 FIREBASE_PROJECT_ID=extended-discipline-s9ffs
@@ -64,7 +64,7 @@ Ensure your `firebase-applet-config.json` contains the correct Firebase project 
   "authDomain": "extended-discipline-s9ffs.firebaseapp.com",
   "storageBucket": "extended-discipline-s9ffs.firebasestorage.app",
   "messagingSenderId": "476538380502",
-  "firestoreDatabaseId": "ai-studio-anaimodelforchil-f69a6a34-a3fb-4b32-88c5-205f33fa827e"
+  "firestoreDatabaseId": "An_AI_model_for_child_Malnutrition_prediction_in_Yemen"
 }
 ```
 

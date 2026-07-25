@@ -51,7 +51,7 @@ export function decryptData(encryptedStr: string): any {
 
 // IndexedDB database definition
 const DB_NAME = "YemenMalnutritionPlatformOfflineDB";
-const DB_VERSION = 1;
+const DB_VERSION = 3;
 
 export interface OfflineRecord {
   id: string; // TEMP-ID
@@ -85,6 +85,27 @@ class IndexedDbService {
     this.initDb();
   }
 
+  private ensureStoresExist(db: IDBDatabase) {
+    const requiredStores = [
+      "patients",
+      "measurements",
+      "predictions",
+      "recommendations",
+      "offline_records",
+      "sync_logs",
+      "device_registry",
+      "upload_history",
+      "audit_logs",
+      "alerts"
+    ];
+
+    for (const store of requiredStores) {
+      if (!db.objectStoreNames.contains(store)) {
+        db.createObjectStore(store, { keyPath: "id" });
+      }
+    }
+  }
+
   private initDb(): Promise<IDBDatabase> {
     if (this.dbPromise) return this.dbPromise;
 
@@ -98,51 +119,25 @@ class IndexedDbService {
 
       request.onupgradeneeded = (_event) => {
         const db = request.result;
-        
-        // Patients store
-        if (!db.objectStoreNames.contains("patients")) {
-          db.createObjectStore("patients", { keyPath: "id" });
-        }
-        // Measurements store
-        if (!db.objectStoreNames.contains("measurements")) {
-          db.createObjectStore("measurements", { keyPath: "id" });
-        }
-        // Predictions store
-        if (!db.objectStoreNames.contains("predictions")) {
-          db.createObjectStore("predictions", { keyPath: "id" });
-        }
-        // Recommendations store
-        if (!db.objectStoreNames.contains("recommendations")) {
-          db.createObjectStore("recommendations", { keyPath: "id" });
-        }
-        // Sync queue / Offline records
-        if (!db.objectStoreNames.contains("offline_records")) {
-          db.createObjectStore("offline_records", { keyPath: "id" });
-        }
-        // Sync logs
-        if (!db.objectStoreNames.contains("sync_logs")) {
-          db.createObjectStore("sync_logs", { keyPath: "id" });
-        }
-        // Device registry
-        if (!db.objectStoreNames.contains("device_registry")) {
-          db.createObjectStore("device_registry", { keyPath: "id" });
-        }
-        // Upload history
-        if (!db.objectStoreNames.contains("upload_history")) {
-          db.createObjectStore("upload_history", { keyPath: "id" });
-        }
-        // Audit logs store
-        if (!db.objectStoreNames.contains("audit_logs")) {
-          db.createObjectStore("audit_logs", { keyPath: "id" });
-        }
-        // Alerts store
-        if (!db.objectStoreNames.contains("alerts")) {
-          db.createObjectStore("alerts", { keyPath: "id" });
-        }
+        this.ensureStoresExist(db);
       };
 
       request.onsuccess = () => {
-        resolve(request.result);
+        const db = request.result;
+        // Verify all required stores exist in current DB, otherwise reopen with incremented version
+        const missingStores = ["patients", "measurements", "predictions", "recommendations", "offline_records", "sync_logs", "device_registry", "upload_history", "audit_logs", "alerts"].filter(s => !db.objectStoreNames.contains(s));
+        if (missingStores.length > 0) {
+          const nextVersion = Math.max(db.version + 1, DB_VERSION + 1);
+          db.close();
+          const req2 = window.indexedDB.open(DB_NAME, nextVersion);
+          req2.onupgradeneeded = () => {
+            this.ensureStoresExist(req2.result);
+          };
+          req2.onsuccess = () => resolve(req2.result);
+          req2.onerror = () => reject(req2.error);
+        } else {
+          resolve(db);
+        }
       };
 
       request.onerror = () => {
@@ -155,7 +150,23 @@ class IndexedDbService {
 
   // --- Helper transactional methods ---
   private async getStore(storeName: string, mode: IDBTransactionMode = "readonly"): Promise<IDBObjectStore> {
-    const db = await this.initDb();
+    let db = await this.initDb();
+
+    if (!db.objectStoreNames.contains(storeName)) {
+      // Force immediate database upgrade if requested store is missing
+      const nextVersion = db.version + 1;
+      db.close();
+      this.dbPromise = new Promise((resolve, reject) => {
+        const req = window.indexedDB.open(DB_NAME, nextVersion);
+        req.onupgradeneeded = () => {
+          this.ensureStoresExist(req.result);
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+      db = await this.dbPromise;
+    }
+
     const transaction = db.transaction(storeName, mode);
     return transaction.objectStore(storeName);
   }
@@ -443,7 +454,7 @@ class IndexedDbService {
         req.onerror = () => reject(req.error);
       });
     } catch (err) {
-      console.warn("IndexedDB saveAlert fallback:", err);
+      // Quiet fallback if storage is restricted in sandbox
     }
   }
 
@@ -490,7 +501,7 @@ class IndexedDbService {
         getReq.onerror = () => reject(getReq.error);
       });
     } catch (err) {
-      console.warn("IndexedDB updateAlertStatus fallback:", err);
+      // Quiet fallback if storage is restricted in sandbox
     }
   }
 

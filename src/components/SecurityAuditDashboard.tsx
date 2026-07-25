@@ -30,7 +30,7 @@ interface SecurityAuditDashboardProps {
 
 export const SecurityAuditDashboard: React.FC<SecurityAuditDashboardProps> = ({
   lang,
-  userEmail = "tasneem1992.7@gmail.com",
+  userEmail = "tasneem@gmail.com",
   userRole = "Administrator"
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<"security" | "performance" | "reports">("security");

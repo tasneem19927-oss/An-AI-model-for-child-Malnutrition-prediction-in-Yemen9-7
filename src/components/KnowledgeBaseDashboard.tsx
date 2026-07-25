@@ -401,7 +401,7 @@ export function KnowledgeBaseDashboard({ lang: _lang }: KnowledgeBaseDashboardPr
           await fetch(`/api/knowledge-base/approve/${propId}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ role: roleToSimulate, userEmail: "tasneem1992.7@gmail.com" })
+            body: JSON.stringify({ role: roleToSimulate, userEmail: "tasneem@gmail.com" })
           });
         } catch (e) {
           console.warn("Could not synchronize approval to central servers, queued locally.", e);

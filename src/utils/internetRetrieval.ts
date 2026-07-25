@@ -74,7 +74,7 @@ export async function retrieveFromInternet(
   answer: string;
   citations: { title: string; website: string; url: string; publishDate: string }[];
 }> {
-  if (!apiKey || apiKey === "AI_STUDIO_INJECTED_OR_YOUR_SECURE_API_KEY") {
+  if (!apiKey || apiKey === "INJECTED_OR_YOUR_SECURE_API_KEY") {
     throw new Error("Gemini API Key is missing or invalid. Please configure your API key in Secrets or Environment variables.");
   }
 
@@ -82,7 +82,7 @@ export async function retrieveFromInternet(
     apiKey,
     httpOptions: {
       headers: {
-        'User-Agent': 'aistudio-build',
+
       }
     }
   });
@@ -92,8 +92,7 @@ export async function retrieveFromInternet(
     ? "Please answer this question comprehensively and objectively in clear, professional Arabic (العربية)."
     : "Please answer this question comprehensively and objectively in English.";
 
-  const prompt = `You are a Senior Clinical Pediatrician and Research Scientist specializing in child malnutrition.
-The user's query is: "${query}"
+  const prompt = `Move the prompt to a configuration file or a server-side secret-managed template: "${query}"
 
 ${languageInstruction}
 Provide clear clinical guidance grounded in trusted publications. You must search for and prioritize results from:
@@ -115,7 +114,7 @@ Response Requirements:
 4. Output professional medical/clinical advice.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3.5-flash",
+    model: "configurable",
     contents: prompt,
     config: {
       tools: [{ googleSearch: {} }],

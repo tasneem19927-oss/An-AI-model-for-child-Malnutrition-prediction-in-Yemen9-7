@@ -124,7 +124,7 @@ The Clinical RAG system bridges statistical predictions with authoritative medic
                                           v
 +-----------------------+     +-----------------------+     +-----------------------+
 |  Reference Guidelines |     |   Semantic Context    |     |   Generative Model    |
-| - WHO SAM Protocols   |====>|       Retrieval       |====>|    (Server Gemini)    |
+| - WHO SAM Protocols   |====>|       Retrieval       |====>|    (Server)    |
 | - Yemen MoPHP 2021    |     | (TF-IDF / BM25 Index) |     |                       |
 +-----------------------+     +-----------------------+     +-----------------------+
                                                                         |
@@ -138,7 +138,6 @@ The Clinical RAG system bridges statistical predictions with authoritative medic
 ### Semantic Retrieval Protocol
 1.  **Document Indexing:** Authoritative guidelines (WHO Severe Acute Malnutrition protocols, Yemen MoPHP Pediatric Treatment Manuals) are split into semantically coherent passages.
 2.  **Vector/Term Matching:** Clinician queries and patient risk profiles are combined into a search query. The system runs local TF-IDF and BM25 search queries over the document index.
-3.  **Context-Bounded Prompting:** The top $N$ retrieved passages are injected into the prompt context for the server-side Gemini generative model:
     ```
     You are an expert pediatric clinician in Yemen.
     Use ONLY the following verified medical reference guidelines to formulate your response:

@@ -130,7 +130,7 @@ export default function App() {
       } else {
         const defaults = [
           { id: "USR-001", name: "Dr. Samer Al-Sanaani", email: "dr.samer@gmail.com", role: "Doctor", facility: "Sana'a Pediatric Clinic", active: true },
-          { id: "USR-002", name: "Tasnim Al-Ohami", email: "tasneem1992.7@gmail.com", role: "Administrator", facility: "National Health Ministry Coordination Center", active: true },
+          { id: "USR-002", name: "Tasnim Al-Ohami", email: "tasneem@gmail.com", role: "Administrator", facility: "National Health Ministry Coordination Center", active: true },
           { id: "USR-003", name: "Nurse Reem Al-Asiri", email: "nurse.reem@gmail.com", role: "Nurse", facility: "Hajja Rural Mobile Health Unit", active: true }
         ];
         setDemoUsers(defaults);
@@ -417,7 +417,7 @@ export default function App() {
                 required
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                placeholder="e.g. tasneem1992.7@gmail.com"
+                placeholder="e.g. tasneem@gmail.com"
                 className="w-full bg-slate-50 border border-slate-200 focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#008DC9] transition-all"
               />
             </div>
@@ -479,9 +479,9 @@ export default function App() {
             </span>
             <div className="grid grid-cols-1 gap-2 text-xs">
               {(demoUsers.length > 0 ? demoUsers : [
-                { id: "USR-001", name: "Dr. Samer Al-Sanaani", email: "dr.samer@gmail.com", role: "Doctor", active: true },
-                { id: "USR-002", name: "Tasnim Al-Ohami", email: "tasneem1992.7@gmail.com", role: "Administrator", active: true },
-                { id: "USR-003", name: "Nurse Reem Al-Asiri", email: "nurse.reem@gmail.com", role: "Nurse", active: true }
+                { id: "USR-001", name: "Dr. Samer Al-Sanaani", email: "dr......@gmail.com", role: "Doctor", active: true },
+                { id: "USR-002", name: "Tasnim Al-Ohami", email: "tasneem@gmail.com", role: "Administrator", active: true },
+                { id: "USR-003", name: "Nurse Reem Al-Asiri", email: "nurse......@gmail.com", role: "Nurse", active: true }
               ]).map((user) => {
                 let avatarStyle = "";
                 let avatarLetters = "";
@@ -530,7 +530,7 @@ export default function App() {
 
         {/* Footer info block */}
         <div className="text-center text-[10px] text-slate-400 font-bold max-w-sm mx-auto space-y-1">
-          <p>YEMEN CHILD MALNUTRITION PREDICTION PLATFORM</p>
+          <p>YEMEN CHILD MALNUTRITION</p>
         </div>
       </div>
     );

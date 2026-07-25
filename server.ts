@@ -61,8 +61,8 @@ const db = {
 db.users = [
   {
     id: "USR-001",
-    name: "Dr. Samer Al-Sanaani",
-    email: "dr.samer@gmail.com",
+    name: "Dr. Samer",
+    email: "dr........@gmail.com",
     role: "Doctor",
     facility: "Sana'a Pediatric Clinic",
     active: true
@@ -70,31 +70,18 @@ db.users = [
   {
     id: "USR-002",
     name: "Tasnim Al-Ohami",
-    email: "tasneem1992.7@gmail.com",
+    email: "tasneem@gmail.com",
     role: "Administrator",
     facility: "National Health Ministry Coordination Center",
     active: true
   },
   {
     id: "USR-003",
-    name: "Nurse Reem Al-Asiri",
-    email: "nurse.reem@gmail.com",
+    name: "Nurse Reem",
+    email: "nurse......@gmail.com",
     role: "Nurse",
     facility: "Hajja Rural Mobile Health Unit",
     active: true
-  }
-];
-
-// Seed initial audit log entries
-db.auditLogs = [
-  {
-    id: "AUD-001",
-    userId: "USR-002",
-    userEmail: "ahmed.admin@malnutrition-cds.org",
-    role: "Administrator",
-    action: "System Initialized",
-    timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
-    details: "Yemen Child Malnutrition prediction platform booted successfully. Preloaded 105 scientific reference vectors."
   }
 ];
 
@@ -110,7 +97,7 @@ db.patients = [
     residenceType: "Rural",
     maternalEducation: "None",
     wealthIndex: "Poorest",
-    contactNumber: "+967-711234567",
+    contactNumber: "+967-999999999",
     createdAt: new Date(Date.now() - 3600000 * 5).toISOString()
   },
   {
@@ -123,7 +110,7 @@ db.patients = [
     residenceType: "Urban",
     maternalEducation: "Secondary",
     wealthIndex: "Middle",
-    contactNumber: "+967-733987654",
+    contactNumber: "+967-999999999",
     createdAt: new Date(Date.now() - 3600000 * 4).toISOString()
   }
 ];
@@ -384,17 +371,17 @@ async function startServer() {
       {
         id: "USR-002",
         name: "Tasnim Al-Ohami",
-        email: "tasneem1992.7@gmail.com",
+        email: "tasneem@gmail.com",
         role: "Administrator",
         facility: "National Health Ministry Coordination Center",
         active: true
       },
       {
         id: "USR-003",
-        name: "Nurse Reem Al-Asiri",
-        email: "nurse.reem@gmail.com",
+        name: "Nurse Reem",
+        email: "nurse.......@gmail.com",
         role: "Nurse",
-        facility: "Hajja Rural Mobile Health Unit",
+        facility: "sana'a Rural Mobile Health Unit",
         active: true
       }
     ];
@@ -407,7 +394,7 @@ async function startServer() {
     const auditEntry = {
       id: `AUD-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
       userId: "USR-002",
-      userEmail: "tasneem1992.7@gmail.com",
+      userEmail: "tasneem@gmail.com",
       role: "Administrator",
       action: "Reset Demo Accounts",
       timestamp: new Date().toISOString(),
@@ -441,7 +428,7 @@ async function startServer() {
     const auditEntry = {
       id: `AUD-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
       userId: "USR-002",
-      userEmail: "tasneem1992.7@gmail.com",
+      userEmail: "tasneem@gmail.com",
       role: "Administrator",
       action: "Modify Clinician Profile",
       timestamp: new Date().toISOString(),
