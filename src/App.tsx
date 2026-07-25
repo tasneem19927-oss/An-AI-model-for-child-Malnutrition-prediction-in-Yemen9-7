@@ -8,6 +8,9 @@ import { AIMonitoringDashboard } from "./components/AIMonitoringDashboard";
 import { KnowledgeBaseDashboard } from "./components/KnowledgeBaseDashboard";
 import { SyncDashboard } from "./components/SyncDashboard";
 import { RecordsSyncDashboard } from "./components/RecordsSyncDashboard";
+import { AlertManagementDashboard } from "./components/AlertManagementDashboard";
+import { ClinicalAlertNotificationBar } from "./components/ClinicalAlertNotificationBar";
+import { SecurityAuditDashboard } from "./components/SecurityAuditDashboard";
 import { syncManager } from "./utils/syncManager";
 import { signInWithPopup, onAuthStateChanged, signOut } from "firebase/auth";
 import { auth, googleProvider, db as firestoreDb } from "./utils/firebase";
@@ -34,7 +37,9 @@ import {
   X,
   BookOpen,
   Award,
-  Menu
+  Menu,
+  Bell,
+  BellRing
 } from "lucide-react";
 
 export default function App() {
@@ -681,6 +686,21 @@ export default function App() {
 
             <button
               onClick={() => {
+                setActiveTab("alerts");
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2.5 ${
+                activeTab === "alerts"
+                  ? "bg-slate-100 text-rose-600 border-l-4 border-rose-600 shadow-sm"
+                  : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              <BellRing className="w-4 h-4 text-rose-600" />
+              <span>{lang === "en" ? "Clinical Alert Engine" : "مركز التنبيهات السريرية"}</span>
+            </button>
+
+            <button
+              onClick={() => {
                 setActiveTab("sync_dashboard");
                 setMobileMenuOpen(false);
               }}
@@ -1025,6 +1045,18 @@ export default function App() {
           </button>
 
           <button
+            onClick={() => setActiveTab("alerts")}
+            className={`w-full text-left px-1 sm:px-2 md:px-3 py-2 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all flex items-center justify-center md:justify-start gap-1.5 sm:gap-2.5 ${
+              activeTab === "alerts" 
+                ? "bg-rose-50 text-rose-700 border-l-4 border-rose-600 shadow-sm font-bold" 
+                : "text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            <BellRing className="w-4 h-4 text-rose-600 shrink-0" />
+            <span className="hidden md:block">{lang === "en" ? "Clinical Alerts" : "التنبيهات السريرية"}</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab("sync_dashboard")}
             className={`w-full text-left px-1 sm:px-2 md:px-3 py-2 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all flex items-center justify-center md:justify-start gap-1.5 sm:gap-2.5 ${
               activeTab === "sync_dashboard" 
@@ -1131,6 +1163,18 @@ export default function App() {
                 <Settings className="w-4 h-4 text-[#008DC9] shrink-0" />
                 <span className="hidden md:block">{t.userManagement}</span>
               </button>
+
+              <button
+                onClick={() => setActiveTab("security_audit")}
+                className={`w-full text-left px-1 sm:px-2 md:px-3 py-2 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all flex items-center justify-center md:justify-start gap-1.5 sm:gap-2.5 ${
+                  activeTab === "security_audit" 
+                    ? "bg-slate-100 text-indigo-700 border-l-4 border-indigo-600 shadow-sm font-bold" 
+                    : "text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                <ShieldAlert className="w-4 h-4 text-indigo-600 shrink-0" />
+                <span className="hidden md:block">{lang === "en" ? "DevSecOps & Security Audit" : "الأمان والأداء السريري"}</span>
+              </button>
             </>
           )}
 
@@ -1147,12 +1191,18 @@ export default function App() {
 
         {/* Content View Routing Area */}
         <main className="flex-1 overflow-y-auto">
+          <ClinicalAlertNotificationBar lang={lang} onOpenAlertsDashboard={() => setActiveTab("alerts")} />
+
           {activeTab === "nurse" && (
             <NurseDashboard lang={lang} onLogAudit={handleLogAuditOnServer} online={online} userRole={currentUser?.role} />
           )}
 
           {activeTab === "doctor" && (
             <DoctorDashboard lang={lang} onLogAudit={handleLogAuditOnServer} online={online} userRole={currentUser?.role} />
+          )}
+
+          {activeTab === "alerts" && (
+            <AlertManagementDashboard lang={lang} userEmail={currentUser?.email} userRole={currentUser?.role} />
           )}
 
           {activeTab === "kb" && (
@@ -1169,6 +1219,10 @@ export default function App() {
 
           {activeTab === "analytics" && (
             <AnalyticsDashboard lang={lang} />
+          )}
+
+          {activeTab === "security_audit" && (
+            <SecurityAuditDashboard lang={lang} userEmail={currentUser?.email} userRole={currentUser?.role} />
           )}
 
           {activeTab === "ai_monitoring" && (

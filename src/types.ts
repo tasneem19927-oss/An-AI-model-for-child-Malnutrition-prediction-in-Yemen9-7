@@ -139,6 +139,8 @@ export interface AuditLog {
   evidenceIds?: string[];
   ruleTriggered?: string;
   decisionOutcome?: string;
+  previousHash?: string;
+  hash?: string;
 }
 
 export interface CalibrationResult {
@@ -240,5 +242,43 @@ export interface FollowupVisitSchedule {
   additionalInvestigations: string[];
   progressTrend: "Improving" | "Stable" | "Deteriorating";
   reminderNote: string;
+}
+
+export type AlertType =
+  | "Critical Clinical"
+  | "Decision Support"
+  | "AI Confidence"
+  | "Knowledge-Based"
+  | "Follow-up"
+  | "System";
+
+export type AlertSeverity = "Critical" | "High" | "Medium" | "Low";
+
+export type AlertResolutionStatus = "Active" | "Acknowledged" | "Dismissed" | "Resolved";
+
+export interface ClinicalAlert {
+  id: string;
+  patientId?: string;
+  patientName?: string;
+  timestamp: string;
+  alertType: AlertType;
+  severity: AlertSeverity;
+  triggerReason: string;
+  triggerReasonAr?: string;
+  clinicalExplanation: string;
+  clinicalExplanationAr?: string;
+  recommendedAction: string;
+  recommendedActionAr?: string;
+  supportingEvidence?: string;
+  whoGuidelineRef?: string;
+  aiConfidenceScore?: number;
+  status: AlertResolutionStatus;
+  acknowledgedBy?: string;
+  acknowledgedAt?: string;
+  resolvedBy?: string;
+  resolvedAt?: string;
+  resolutionNotes?: string;
+  persistent: boolean;
+  categoryTag: string;
 }
 

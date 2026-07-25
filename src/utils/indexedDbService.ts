@@ -135,6 +135,10 @@ class IndexedDbService {
         if (!db.objectStoreNames.contains("audit_logs")) {
           db.createObjectStore("audit_logs", { keyPath: "id" });
         }
+        // Alerts store
+        if (!db.objectStoreNames.contains("alerts")) {
+          db.createObjectStore("alerts", { keyPath: "id" });
+        }
       };
 
       request.onsuccess = () => {
@@ -426,6 +430,68 @@ class IndexedDbService {
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
     });
+  }
+
+  // --- Clinical Alerts Methods ---
+  public async saveAlert(alert: any): Promise<void> {
+    if (typeof window === "undefined" || !window.indexedDB) return;
+    try {
+      const store = await this.getStore("alerts", "readwrite");
+      return new Promise((resolve, reject) => {
+        const req = store.put(alert);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      });
+    } catch (err) {
+      console.warn("IndexedDB saveAlert fallback:", err);
+    }
+  }
+
+  public async getAlerts(): Promise<any[]> {
+    if (typeof window === "undefined" || !window.indexedDB) return [];
+    try {
+      const store = await this.getStore("alerts");
+      return new Promise((resolve, reject) => {
+        const req = store.getAll();
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    } catch (err) {
+      return [];
+    }
+  }
+
+  public async updateAlertStatus(alertId: string, status: string, userEmail: string, notes?: string): Promise<void> {
+    if (typeof window === "undefined" || !window.indexedDB) return;
+    try {
+      const store = await this.getStore("alerts", "readwrite");
+      return new Promise((resolve, reject) => {
+        const getReq = store.get(alertId);
+        getReq.onsuccess = () => {
+          const item = getReq.result;
+          if (item) {
+            item.status = status;
+            const now = new Date().toISOString();
+            if (status === "Acknowledged") {
+              item.acknowledgedBy = userEmail;
+              item.acknowledgedAt = now;
+            } else if (status === "Resolved" || status === "Dismissed") {
+              item.resolvedBy = userEmail;
+              item.resolvedAt = now;
+              if (notes) item.resolutionNotes = notes;
+            }
+            const putReq = store.put(item);
+            putReq.onsuccess = () => resolve();
+            putReq.onerror = () => reject(putReq.error);
+          } else {
+            resolve();
+          }
+        };
+        getReq.onerror = () => reject(getReq.error);
+      });
+    } catch (err) {
+      console.warn("IndexedDB updateAlertStatus fallback:", err);
+    }
   }
 
   // --- Clear Database for Testing ---

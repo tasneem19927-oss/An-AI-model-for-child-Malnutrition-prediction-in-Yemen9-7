@@ -36,6 +36,7 @@ import { evaluateUnifiedCdss } from "../utils/unifiedCdssEngine";
 import { analyzeMuacTapeImage } from "../utils/muacVisionModel";
 import { generateFollowupSchedule } from "../utils/followupSystem";
 import { clinicalAuditLogger } from "../utils/auditLogger";
+import { clinicalAlertEngine } from "../utils/alertEngine";
 
 interface NurseDashboardProps {
   lang: Language;
@@ -917,6 +918,39 @@ export function NurseDashboard({ lang, onLogAudit, online, userRole }: NurseDash
       localPrediction.engineeredFeatures as Record<string, number>,
       samReMeasurementVerified
     );
+
+    // Evaluate real-time clinical alerts
+    try {
+      clinicalAlertEngine.evaluateMeasurements({
+        patientId: patient.id,
+        patientName: patient.name,
+        ageMonths: patient.ageMonths,
+        weight: Number(w),
+        height: Number(h),
+        muac: resolvedMuac,
+        oedema: oed,
+        diarrhea: dia,
+        fever: fev,
+        cough: cgh,
+        notes
+      });
+
+      clinicalAlertEngine.evaluateAiPredictions({
+        patientId: patient.id,
+        patientName: patient.name,
+        modelConfidence: localPrediction.wasting.probability,
+        uncertaintyScore: Math.abs(0.5 - localPrediction.wasting.probability) * 2 < 0.2 ? 0.8 : 0.1,
+        anomalyDetected: !cdssDecision.isConsistent
+      });
+
+      clinicalAlertEngine.evaluateCdssDecision({
+        patientId: patient.id,
+        patientName: patient.name,
+        cdssDecision
+      });
+    } catch (alertErr) {
+      console.warn("Clinical Alert Engine trigger error:", alertErr);
+    }
 
     const followupSchedule = generateFollowupSchedule(
       patient.id,

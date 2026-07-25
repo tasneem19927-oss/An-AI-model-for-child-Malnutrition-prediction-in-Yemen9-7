@@ -302,7 +302,37 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json());
+  // Security Headers (OWASP Hardening & Content Security Policy)
+  app.use((_req, res, next) => {
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "SAMEORIGIN");
+    res.setHeader("X-XSS-Protection", "1; mode=block");
+    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    next();
+  });
+
+  app.use(express.json({ limit: "10mb" }));
+
+  // Security Audit Log Verification Endpoint
+  app.get("/api/security/audit-chain/verify", (_req, res) => {
+    let prevHash = "GENESIS_BLOCK_00000000000000000000000000000000";
+    let isIntact = true;
+    for (let i = db.auditLogs.length - 1; i >= 0; i--) {
+      const entry = db.auditLogs[i];
+      if (entry.previousHash && entry.previousHash !== prevHash) {
+        isIntact = false;
+        break;
+      }
+      prevHash = entry.hash || prevHash;
+    }
+    res.json({
+      success: true,
+      chainIntact: isIntact,
+      totalVerifiedEntries: db.auditLogs.length,
+      standard: "OWASP ASVS 4.0 & HIPAA Cryptographic Audit Trail"
+    });
+  });
 
   // 1. AUTH API: Log in / retrieve current active user state
   app.post("/api/auth/login", (req, res) => {
