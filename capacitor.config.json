@@ -1,0 +1,28 @@
+{
+  "appId": "com.health.yemen.sam.cdss",
+  "appName": "WHO Child Nutrition CDSS",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#008DC9",
+      "showSpinner": false
+    },
+    "Network": {
+      "statusChangeNotification": true
+    },
+    "Camera": {
+      "permissions": ["camera"]
+    }
+  }
+}

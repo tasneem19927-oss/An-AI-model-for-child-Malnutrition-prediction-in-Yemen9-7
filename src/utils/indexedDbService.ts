@@ -3,12 +3,19 @@ import { Patient, Measurement, MalnutritionPrediction, ClinicalRecommendation, S
 // Encryption secret key management for offline storage compliance
 const ENCRYPTION_KEY_STORAGE_NAME = "yemen_platform_local_secret_key";
 function getOrCreateSecretKey(): string {
+  if (typeof window === "undefined" || typeof localStorage === "undefined") {
+    return "yemen-default-secret-key-server-side";
+  }
   let key = localStorage.getItem(ENCRYPTION_KEY_STORAGE_NAME);
   if (!key) {
     // Generate a secure-looking random device encryption salt/key
     const array = new Uint32Array(8);
-    window.crypto.getRandomValues(array);
-    key = Array.from(array, (num) => num.toString(16).padStart(8, "0")).join("-");
+    if (typeof window !== "undefined" && window.crypto && window.crypto.getRandomValues) {
+      window.crypto.getRandomValues(array);
+      key = Array.from(array, (num) => num.toString(16).padStart(8, "0")).join("-");
+    } else {
+      key = "yemen-default-secret-key-fallback";
+    }
     localStorage.setItem(ENCRYPTION_KEY_STORAGE_NAME, key);
   }
   return key;
@@ -81,6 +88,11 @@ class IndexedDbService {
   private initDb(): Promise<IDBDatabase> {
     if (this.dbPromise) return this.dbPromise;
 
+    if (typeof window === "undefined" || !window.indexedDB) {
+      this.dbPromise = Promise.reject(new Error("IndexedDB is not available on server-side"));
+      return this.dbPromise;
+    }
+
     this.dbPromise = new Promise((resolve, reject) => {
       const request = window.indexedDB.open(DB_NAME, DB_VERSION);
 
@@ -118,6 +130,10 @@ class IndexedDbService {
         // Upload history
         if (!db.objectStoreNames.contains("upload_history")) {
           db.createObjectStore("upload_history", { keyPath: "id" });
+        }
+        // Audit logs store
+        if (!db.objectStoreNames.contains("audit_logs")) {
+          db.createObjectStore("audit_logs", { keyPath: "id" });
         }
       };
 
@@ -326,6 +342,13 @@ class IndexedDbService {
 
   // --- Device Registry Methods ---
   public async getDeviceInfo(): Promise<DeviceInfo> {
+    if (typeof window === "undefined" || !window.indexedDB) {
+      return {
+        id: "DEV-SERVER",
+        name: "Yemen-Server-Unit",
+        registeredAt: new Date().toISOString()
+      };
+    }
     const store = await this.getStore("device_registry");
     return new Promise((resolve, reject) => {
       const req = store.getAll();
@@ -335,9 +358,9 @@ class IndexedDbService {
           resolve(results[0]);
         } else {
           // Initialize local device registry info
-          const storedDeviceName = localStorage.getItem("yemen_platform_device_name");
+          const storedDeviceName = typeof localStorage !== "undefined" ? localStorage.getItem("yemen_platform_device_name") : null;
           const deviceName = storedDeviceName || `Yemen-Mobile-Unit-${Math.floor(1000 + Math.random() * 9000)}`;
-          if (!storedDeviceName) {
+          if (!storedDeviceName && typeof localStorage !== "undefined") {
             localStorage.setItem("yemen_platform_device_name", deviceName);
           }
           const defaultInfo: DeviceInfo = {
@@ -384,6 +407,25 @@ class IndexedDbService {
   public async isAlreadyUploaded(recordId: string): Promise<boolean> {
     const list = await this.getUploadHistory();
     return list.some((item) => item.recordId === recordId && item.status === "Success");
+  }
+
+  // --- Audit Logs Methods ---
+  public async saveAuditLog(log: any): Promise<void> {
+    const store = await this.getStore("audit_logs", "readwrite");
+    return new Promise((resolve, reject) => {
+      const req = store.put(log);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  public async getAuditLogs(): Promise<any[]> {
+    const store = await this.getStore("audit_logs");
+    return new Promise((resolve, reject) => {
+      const req = store.getAll();
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
   }
 
   // --- Clear Database for Testing ---

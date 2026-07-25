@@ -1,6 +1,9 @@
 import { MalnutritionPrediction, PredictionDetail } from "../types";
 import { calculateZScoresAndFeatures } from "./growth";
 import { XGBoostNode, stunting_model_trees, wasting_model_trees, underweight_model_trees } from "../data/trained_models";
+import { predictStackingEnsemble } from "./stackingModel";
+import { calibrateProbability } from "./calibration";
+import { clinicalAuditLogger } from "./auditLogger";
 
 /**
  * Traverses a simplified XGBoost decision tree node and returns its leaf value.
@@ -114,7 +117,11 @@ export function predictMalnutrition(
   };
 
   // Model 1: Stunting Prediction
-  const stuntingProb = predictProbabilityFromTrees(stunting_model_trees, features);
+  const rawStuntingProb = predictProbabilityFromTrees(stunting_model_trees, features);
+  const stackedStunting = predictStackingEnsemble(rawStuntingProb, features);
+  const calibratedStunting = calibrateProbability(stackedStunting.metaStackingProbability);
+  const stuntingProb = calibratedStunting.selectedProbability;
+
   const stuntingSeverity = getSeverityClass(haz);
   const stuntingConfidence = calculateConfidenceScore(haz, stuntingProb);
 
@@ -126,7 +133,11 @@ export function predictMalnutrition(
   };
 
   // Model 2: Wasting Prediction
-  const wastingProb = predictProbabilityFromTrees(wasting_model_trees, features);
+  const rawWastingProb = predictProbabilityFromTrees(wasting_model_trees, features);
+  const stackedWasting = predictStackingEnsemble(rawWastingProb, features);
+  const calibratedWasting = calibrateProbability(stackedWasting.metaStackingProbability);
+  const wastingProb = calibratedWasting.selectedProbability;
+
   const wastingSeverity = oedema ? "Severe" : getSeverityClass(whz);
   const wastingConfidence = calculateConfidenceScore(whz, wastingProb);
 
@@ -138,7 +149,11 @@ export function predictMalnutrition(
   };
 
   // Model 3: Underweight Prediction
-  const underweightProb = predictProbabilityFromTrees(underweight_model_trees, features);
+  const rawUnderweightProb = predictProbabilityFromTrees(underweight_model_trees, features);
+  const stackedUnderweight = predictStackingEnsemble(rawUnderweightProb, features);
+  const calibratedUnderweight = calibrateProbability(stackedUnderweight.metaStackingProbability);
+  const underweightProb = calibratedUnderweight.selectedProbability;
+
   const underweightSeverity = getSeverityClass(waz);
   const underweightConfidence = calculateConfidenceScore(waz, underweightProb);
 
@@ -148,6 +163,19 @@ export function predictMalnutrition(
     severityClass: underweightSeverity,
     confidenceScore: underweightConfidence
   };
+
+  // Log clinical audit entry
+  clinicalAuditLogger.logEvent(
+    "system@mophp.gov.ye",
+    "Clinical Engine",
+    "Execute Malnutrition Prediction",
+    `Evaluated patient ${patientId} (Wasting Risk: ${(wastingProb * 100).toFixed(1)}%, Stunting: ${(stuntingProb * 100).toFixed(1)}%) with Stacking Ensemble & ${calibratedWasting.selectedMethod} Calibration.`,
+    {
+      patientId,
+      modelVersion: "Stacking-XGBoost-v2.4.0-Calibrated",
+      decisionOutcome: `Wasting: ${wastingSeverity}, Stunting: ${stuntingSeverity}, Underweight: ${underweightSeverity}`
+    }
+  );
 
   return {
     id: `PRED-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,

@@ -13,7 +13,7 @@ type SyncListener = (status: SyncStatus) => void;
 
 class SyncManager {
   private listeners: Set<SyncListener> = new Set();
-  private onlineStatus: boolean = navigator.onLine;
+  private onlineStatus: boolean = typeof navigator !== "undefined" ? navigator.onLine : true;
   private syncInProgress: boolean = false;
   private lastSyncTime: string | null = null;
   private deviceName: string = "";
@@ -24,9 +24,11 @@ class SyncManager {
   }
 
   private async init() {
-    // Listen to browser network connectivity events
-    window.addEventListener("online", () => this.handleNetworkChange(true));
-    window.addEventListener("offline", () => this.handleNetworkChange(false));
+    if (typeof window !== "undefined") {
+      // Listen to browser network connectivity events
+      window.addEventListener("online", () => this.handleNetworkChange(true));
+      window.addEventListener("offline", () => this.handleNetworkChange(false));
+    }
 
     // Retrieve device info
     try {
@@ -37,7 +39,7 @@ class SyncManager {
       console.error("Failed to load device info:", e);
     }
 
-    this.lastSyncTime = localStorage.getItem("yemen_platform_last_sync_time");
+    this.lastSyncTime = typeof localStorage !== "undefined" ? localStorage.getItem("yemen_platform_last_sync_time") : null;
     this.notify();
 
     // Run initial auto sync if we are online on startup
@@ -51,8 +53,10 @@ class SyncManager {
     this.notify();
 
     // Trigger notification callback in window
-    const event = new CustomEvent("network-status-changed", { detail: { online } });
-    window.dispatchEvent(event);
+    if (typeof window !== "undefined") {
+      const event = new CustomEvent("network-status-changed", { detail: { online } });
+      window.dispatchEvent(event);
+    }
 
     if (online) {
       console.log("Internet connection restored. Triggering automatic background synchronization...");
@@ -199,7 +203,9 @@ class SyncManager {
 
       // 5. Update local lastSync timestamp
       this.lastSyncTime = new Date().toISOString();
-      localStorage.setItem("yemen_platform_last_sync_time", this.lastSyncTime || "");
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem("yemen_platform_last_sync_time", this.lastSyncTime || "");
+      }
 
       // Register a local sync log
       const localLog = {
@@ -213,10 +219,12 @@ class SyncManager {
       await indexedDbService.addSyncLog(localLog);
 
       // Trigger a success notification event in window
-      const syncEvent = new CustomEvent("synchronization-completed", { 
-        detail: { recordsCount: pending.length } 
-      });
-      window.dispatchEvent(syncEvent);
+      if (typeof window !== "undefined") {
+        const syncEvent = new CustomEvent("synchronization-completed", { 
+          detail: { recordsCount: pending.length } 
+        });
+        window.dispatchEvent(syncEvent);
+      }
 
       this.syncInProgress = false;
       this.notify();

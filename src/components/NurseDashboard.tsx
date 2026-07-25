@@ -32,6 +32,10 @@ import { generateClinicalReasoning, searchKnowledgeBase, learnNewDiagnosticCase,
 import { BioMobileBERTNER } from "../utils/ner";
 import { calculateZScoresAndFeatures } from "../utils/growth";
 import { PatientClinicalHistory } from "./PatientClinicalHistory";
+import { evaluateUnifiedCdss } from "../utils/unifiedCdssEngine";
+import { analyzeMuacTapeImage } from "../utils/muacVisionModel";
+import { generateFollowupSchedule } from "../utils/followupSystem";
+import { clinicalAuditLogger } from "../utils/auditLogger";
 
 interface NurseDashboardProps {
   lang: Language;
@@ -80,6 +84,13 @@ export function NurseDashboard({ lang, onLogAudit, online, userRole }: NurseDash
   // Immediate Local Diagnosis Drawer States
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [diagnosisData, setDiagnosisData] = useState<any | null>(null);
+
+  // Unified CDSS, SAM Verification & Edge Vision Camera States
+  const [samReMeasurementVerified, setSamReMeasurementVerified] = useState(false);
+  const [showSamVerificationModal, setShowSamVerificationModal] = useState(false);
+  const [muacVisionActive, setMuacVisionActive] = useState(false);
+  const [muacVisionData, setMuacVisionData] = useState<any | null>(null);
+  const [followupScheduleData, setFollowupScheduleData] = useState<any | null>(null);
 
   // --- SMART TRIPLE NAME MATCHING & LONGITUDINAL TRAJECTORY STATES ---
   const [nameSearch, setNameSearch] = useState("");
@@ -894,6 +905,39 @@ export function NurseDashboard({ lang, onLogAudit, online, userRole }: NurseDash
     }
 
     // Load diagnosis payload into UI drawer state
+    const cdssDecision = evaluateUnifiedCdss(
+      patient.id,
+      localPrediction.wasting.probability,
+      localPrediction.stunting.probability,
+      localPrediction.underweight.probability,
+      Number(w),
+      Number(h),
+      resolvedMuac,
+      oed,
+      localPrediction.engineeredFeatures as Record<string, number>,
+      samReMeasurementVerified
+    );
+
+    const followupSchedule = generateFollowupSchedule(
+      patient.id,
+      patient.name,
+      cdssDecision.finalSeverity
+    );
+    setFollowupScheduleData(followupSchedule);
+
+    clinicalAuditLogger.logEvent(
+      "nurse@mophp.gov.ye",
+      "Nurse",
+      "CDSS Diagnosis Generated",
+      `Unified CDSS Decision for ${patient.name}: Severity = ${cdssDecision.finalSeverity}, Diagnosis = ${cdssDecision.finalDiagnosis}. ${cdssDecision.conflictExplanation ? "Conflict Resolved: " + cdssDecision.conflictExplanation : "Hard constraints consistent with ML soft priors."}`,
+      {
+        patientId: patient.id,
+        modelVersion: "Stacking-XGBoost-v2.4.0-CDSS",
+        ruleTriggered: cdssDecision.hardConstraints.filter(c => c.conditionMet).map(c => c.ruleName).join("; "),
+        decisionOutcome: cdssDecision.finalSeverity
+      }
+    );
+
     setDiagnosisData({
       patient,
       prediction: localPrediction,
@@ -908,7 +952,9 @@ export function NurseDashboard({ lang, onLogAudit, online, userRole }: NurseDash
       oedema: oed,
       symptoms: sym,
       notes,
-      growthTrend: trend
+      growthTrend: trend,
+      cdssDecision,
+      followupSchedule
     });
 
     // Open slide side-panel instantly

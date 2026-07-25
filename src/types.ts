@@ -134,4 +134,111 @@ export interface AuditLog {
   action: string;
   timestamp: string;
   details: string;
+  patientId?: string;
+  modelVersion?: string;
+  evidenceIds?: string[];
+  ruleTriggered?: string;
+  decisionOutcome?: string;
 }
+
+export interface CalibrationResult {
+  rawProbability: number;
+  plattProbability: number;
+  isotonicProbability: number;
+  selectedProbability: number;
+  selectedMethod: "Platt" | "Isotonic";
+  brierScorePlatt: number;
+  brierScoreIsotonic: number;
+  expectedCalibrationError: number;
+}
+
+export interface StackingPredictionResult {
+  xgboostProbability: number;
+  randomForestProxyProbability: number;
+  logisticRegressionProxyProbability: number;
+  metaStackingProbability: number;
+  statisticallySignificantGain: boolean;
+  aucImprovement: number;
+}
+
+export interface MuacVisionAnalysis {
+  detectedMuacMm: number;
+  colorBand: "Red" | "Yellow" | "Green";
+  category: "SAM" | "MAM" | "Normal";
+  confidence: number;
+  tapeBoundingBox: { x: number; y: number; width: number; height: number };
+  markerReadingsMm: number[];
+  reMeasurementRequired: boolean;
+  notes: string;
+}
+
+export interface EdgeBenchmarkMetrics {
+  inferenceLatencyMs: number;
+  memoryUsageMb: number;
+  cpuUsagePct: number;
+  batteryDrainPer1kPct: number;
+  modelStorageKb: number;
+  deviceProfile: "Low-End Android (2GB RAM)" | "Mid-Range Android (4GB RAM)" | "Edge Workstation";
+  fps: number;
+}
+
+export interface RagBenchmarkMetrics {
+  retrievalAccuracy: number;
+  recallAtK: number;
+  precisionAtK: number;
+  meanReciprocalRank: number; // MRR
+  ndcgScore: number; // nDCG
+  answerFaithfulness: number;
+  groundednessScore: number;
+  evaluatedQueriesCount: number;
+}
+
+export interface ConfusionMatrixMetrics {
+  truePositives: number;
+  falsePositives: number;
+  trueNegatives: number;
+  falseNegatives: number;
+  precision: number;
+  recall: number;
+  f1Score: number;
+  sensitivity: number;
+  specificity: number;
+  mcc: number;
+}
+
+export interface UnifiedCdssDecision {
+  patientId: string;
+  hardConstraints: {
+    ruleName: string;
+    conditionMet: boolean;
+    mandatoryAction?: string;
+    overridePriority: "Critical" | "High" | "Standard";
+  }[];
+  softPriorProbability: number;
+  softPriorSeverity: "Normal" | "Mild" | "Moderate" | "Severe";
+  isConsistent: boolean;
+  conflictExplanation?: string;
+  finalDiagnosis: string;
+  finalDiagnosisAr: string;
+  finalSeverity: "Normal" | "Mild" | "Moderate" | "Severe";
+  recommendedInterventions: string[];
+  recommendedInterventionsAr: string[];
+  referralStatus: "None" | "Outpatient Care" | "Inpatient SAM Stabilization" | "Immediate Emergency Referral";
+  reMeasurementVerified?: boolean;
+}
+
+export interface FollowupVisitSchedule {
+  id: string;
+  patientId: string;
+  patientName: string;
+  initialDiagnosisDate: string;
+  severity: "Normal" | "Mild" | "Moderate" | "Severe";
+  recommendedIntervalDays: number;
+  nextFollowupDate: string;
+  status: "Scheduled" | "Completed" | "Overdue";
+  recommendedExaminations: string[];
+  additionalInvestigations: string[];
+  progressTrend: "Improving" | "Stable" | "Deteriorating";
+  reminderNote: string;
+}
+
